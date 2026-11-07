@@ -8,7 +8,7 @@ includeAliasesInList: true
 
 models:
   qwen35-fast:
-    cmd: /Users/fabiomalagutti/ai-env/bin/rapid-mlx serve ${HOME}/.models/qwen3.6-35b-a3b-mlx-4bit
+    cmd: ${HOME}/ai-env/bin/rapid-mlx serve ${HOME}/.models/qwen3.6-35b-a3b-mlx-4bit
       --served-model-name qwen35-fast --host 127.0.0.1 --port ${PORT} --cors-origins "*"
       --allow-unauthenticated-public --trusted-hosts localhost 127.0.0.1 "*"
       --resident-memory-limit-gb 56 --context-length 131072 --enable-prefix-cache
@@ -21,7 +21,7 @@ models:
     ttl: 600
 
   qwen35-core:
-    cmd: /Users/fabiomalagutti/ai-env/bin/rapid-mlx serve ${HOME}/.models/qwen3.6-35b-a3b-mlx-8bit
+    cmd: ${HOME}/ai-env/bin/rapid-mlx serve ${HOME}/.models/qwen3.6-35b-a3b-mlx-8bit
       --served-model-name qwen35-core --host 127.0.0.1 --port ${PORT} --cors-origins "*"
       --allow-unauthenticated-public --trusted-hosts localhost 127.0.0.1 "*"
       --resident-memory-limit-gb 56 --context-length 131072 --gpu-memory-utilization 0.92
@@ -35,7 +35,7 @@ models:
     ttl: 600
 
   gemma4-moe:
-    cmd: /Users/fabiomalagutti/ai-env/bin/rapid-mlx serve ${HOME}/.models/gemma-4-26b-a4b-mlx-8bit
+    cmd: ${HOME}/ai-env/bin/rapid-mlx serve ${HOME}/.models/gemma-4-26b-a4b-mlx-8bit
       --served-model-name gemma4-moe --host 127.0.0.1 --port ${PORT} --cors-origins "*"
       --allow-unauthenticated-public --trusted-hosts localhost 127.0.0.1 "*"
       --resident-memory-limit-gb 56 --context-length 65536 --gpu-memory-utilization 0.85
@@ -48,7 +48,7 @@ models:
     ttl: 600
 
   bolt74b:
-    cmd: /Users/fabiomalagutti/ai-env/bin/rapid-mlx serve ${HOME}/.models/nemotron-3.5-bolt-74b-a9b-mlx-4bit
+    cmd: ${HOME}/ai-env/bin/rapid-mlx serve ${HOME}/.models/nemotron-3.5-bolt-74b-a9b-mlx-4bit
       --served-model-name bolt74b --host 127.0.0.1 --port ${PORT} --cors-origins "*"
       --allow-unauthenticated-public --trusted-hosts localhost 127.0.0.1 "*"
       --resident-memory-limit-gb 56 --context-length 32768 --gpu-memory-utilization 0.90

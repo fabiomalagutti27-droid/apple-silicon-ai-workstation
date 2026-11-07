@@ -26,7 +26,7 @@ mcp = FastMCP("local-code-worker")
 def get_default_mac_mini_host() -> str:
     import platform
     h = platform.node().lower()
-    if "mini" in h or os.path.exists("/Users/fabiomalagutti/.config/llama-swap"):
+    if "mini" in h or os.path.exists(os.path.expanduser("~/.config/llama-swap")):
         return "127.0.0.1"
     return os.environ.get("MAC_MINI_HOST", "127.0.0.1")
 
@@ -242,10 +242,10 @@ def delegate_to_antigravity(
     if context and context.strip():
         prompt += f"\n\nCONTESTO RILEVANTE:\n{context.strip()}"
 
-    agy_binary = "/Users/fabiomalagutti/.local/bin/agy"
+    import shutil
+    agy_binary = os.environ.get("AGY_CLI_BIN") or shutil.which("agy") or os.path.expanduser("~/.local/bin/agy")
     if not os.path.exists(agy_binary):
-        import shutil
-        agy_binary = shutil.which("agy") or "/opt/homebrew/bin/agy" or "agy"
+        agy_binary = "/opt/homebrew/bin/agy" if os.path.exists("/opt/homebrew/bin/agy") else "agy"
 
     clean_model = "gemini-3.8-flash-high"
     if model_override:
@@ -287,7 +287,12 @@ def prune_compiler_logs(raw_log: str, max_lines: Optional[int] = 100) -> str:
     da output prolissi di build (Rust/Cargo, Python, TypeScript), eliminando centinaia di righe
     di warning innocui e riducendo fino al 90% i token di contesto per l'agente.
     """
-    sys.path.insert(0, "/Users/fabiomalagutti/ai-ecosystem")
+    from pathlib import Path
+    pkg_root = Path(__file__).resolve().parent.parent.parent
+    if str(pkg_root) not in sys.path:
+        sys.path.insert(0, str(pkg_root))
+    if os.path.expanduser("~/ai-ecosystem") not in sys.path:
+        sys.path.insert(0, os.path.expanduser("~/ai-ecosystem"))
     from core.log_pruner import prune_compiler_log
     return prune_compiler_log(raw_log, max_lines=max_lines or 100)
 
@@ -299,7 +304,12 @@ def compress_agent_context(text: str, target_ratio: Optional[float] = 0.5) -> st
     Comprime del 50-70% ricerche web prolisse (ddg_search), dump JSON o lunghe cronologie di ticket,
     mantenendo inalterata la semantica e le entità chiave a zero impatto sulla VRAM dei modelli MoE.
     """
-    sys.path.insert(0, "/Users/fabiomalagutti/ai-ecosystem")
+    from pathlib import Path
+    pkg_root = Path(__file__).resolve().parent.parent.parent
+    if str(pkg_root) not in sys.path:
+        sys.path.insert(0, str(pkg_root))
+    if os.path.expanduser("~/ai-ecosystem") not in sys.path:
+        sys.path.insert(0, os.path.expanduser("~/ai-ecosystem"))
     from core.context_compressor import compress_text_context
     return compress_text_context(text, target_ratio=target_ratio or 0.5)
 
@@ -311,7 +321,12 @@ def rerank_vault_documents(query: str, candidate_chunks: list[str], top_k: Optio
     Riordina semanticamente i frammenti di note Obsidian o codice recuperati per la query specificata,
     restituendo solo i top_k chunk a massima confidenza per eliminare le allucinazioni nel modello Docente.
     """
-    sys.path.insert(0, "/Users/fabiomalagutti/ai-ecosystem")
+    from pathlib import Path
+    pkg_root = Path(__file__).resolve().parent.parent.parent
+    if str(pkg_root) not in sys.path:
+        sys.path.insert(0, str(pkg_root))
+    if os.path.expanduser("~/ai-ecosystem") not in sys.path:
+        sys.path.insert(0, os.path.expanduser("~/ai-ecosystem"))
     from core.semantic_search import rerank_documents
     results = rerank_documents(query, candidate_chunks, top_k=top_k or 3)
     return json.dumps(results, indent=2, ensure_ascii=False)
@@ -328,7 +343,11 @@ def review_diff_with_antigravity(workspace_path: Optional[str] = None, force: Op
     incompleti PRIMA di eseguire `gh pr create`. Restituisce VERDICT: APPROVED o VERDICT: CHANGES_REQUESTED.
     """
     from pathlib import Path
-    sys.path.insert(0, "/Users/fabiomalagutti/ai-ecosystem")
+    pkg_root = Path(__file__).resolve().parent.parent.parent
+    if str(pkg_root) not in sys.path:
+        sys.path.insert(0, str(pkg_root))
+    if os.path.expanduser("~/ai-ecosystem") not in sys.path:
+        sys.path.insert(0, os.path.expanduser("~/ai-ecosystem"))
     from integrations.agy_pr_review_gate import run_review_gate
     ws = Path(workspace_path or os.getcwd()).resolve()
     approved, report = run_review_gate(ws, force=bool(force))

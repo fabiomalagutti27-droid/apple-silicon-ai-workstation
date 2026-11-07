@@ -3,7 +3,7 @@ from __future__ import annotations
 """submit_phase_pr.py: Atomic Closing Tool (ACI) per DeepSeek SuperAgent su Mac mini M5 Pro.
 
 Esegue la chiusura deterministica di una fase di sviluppo:
-1. Verifica compilazione e test con `/Users/fabiomalagutti/.local/bin/cargo-uma test`.
+1. Verifica compilazione e test con `cargo-uma test`.
 2. Esegue `git add` selettivo (escludendo file temporanei, log e preflight).
 3. Esegue `git commit` strutturato (Conventional Commits).
 4. Esegue `git push origin HEAD`.
@@ -16,17 +16,20 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import sys
 
-CARGO_UMA = "/Users/fabiomalagutti/.local/bin/cargo-uma"
+HOME_DIR = Path.home()
+CARGO_UMA = os.environ.get("CARGO_UMA", shutil.which("cargo-uma") or str(HOME_DIR / ".local/bin/cargo-uma"))
 GH_AGENT = "gh"
-AGY_GATE = "/Users/fabiomalagutti/ai-ecosystem/integrations/agy_pr_review_gate.py"
+AGY_GATE = os.environ.get("AGY_GATE", str(HOME_DIR / "ai-ecosystem/integrations/agy_pr_review_gate.py"))
 
 
 def run_cmd(cmd: list[str], cwd: Path | None = None, timeout: int = 300) -> tuple[int, str, str]:
     env = os.environ.copy()
-    env["PATH"] = f"/Users/fabiomalagutti/bin:/Users/fabiomalagutti/.local/bin:/opt/homebrew/bin:{env.get('PATH', '')}"
+    bin_dirs = [str(HOME_DIR / "bin"), str(HOME_DIR / ".local/bin"), "/opt/homebrew/bin"]
+    env["PATH"] = ":".join(bin_dirs) + f":{env.get('PATH', '')}"
     try:
         proc = subprocess.run(
             cmd,

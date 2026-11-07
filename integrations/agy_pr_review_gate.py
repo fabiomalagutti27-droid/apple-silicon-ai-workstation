@@ -24,8 +24,9 @@ import sys
 import time
 import urllib.request
 
-GATEWAY_URL = "http://127.0.0.1:8000/v1/chat/completions"
-AGY_CLI_BIN = "/Users/fabiomalagutti/.gemini/antigravity-cli/bin/agy"
+HOME_DIR = Path.home()
+GATEWAY_URL = os.environ.get("LLAMA_SWAP_URL", "http://127.0.0.1:8000/v1/chat/completions")
+AGY_CLI_BIN = os.environ.get("AGY_CLI_BIN", str(HOME_DIR / ".gemini/antigravity-cli/bin/agy"))
 MAX_REVIEW_ROUNDS = 2
 
 
@@ -251,7 +252,7 @@ def run_review_gate(workspace: Path, force: bool = False) -> tuple[bool, str]:
             f"{critic_report}\n\n"
             f"👉 AZIONE OBBLIGATORIA PER IL WORKER (`qwen35-fast`):\n"
             f"1. Correggi subito i punti indicati qui sopra nei file sorgente.\n"
-            f"2. Verifica la compilazione e i test con `/Users/fabiomalagutti/.local/bin/cargo-uma test`.\n"
+            f"2. Verifica la compilazione e i test con `cargo-uma test`.\n"
             f"3. Esegui `git add` e `git commit` con le correzioni.\n"
             f"4. Rilancia `gh pr create` per superare il gate e pubblicare la PR.\n"
             f"======================================================================"

@@ -3,6 +3,7 @@ import argparse
 import json
 import logging
 import os
+from pathlib import Path
 import subprocess
 import time
 import uuid
@@ -58,14 +59,15 @@ async def chat_completions(req: Request):
         '--dangerously-skip-permissions'
     ]
     
+    home_dir = str(Path.home())
     env = os.environ.copy()
-    env['HOME'] = '/Users/fabiomalagutti'
-    env['PATH'] = '/Users/fabiomalagutti/.local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin'
+    env['HOME'] = home_dir
+    env['PATH'] = f"{home_dir}/.local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
     env['SSH_CLIENT'] = '127.0.0.1 1234 22'
     env['SSH_CONNECTION'] = '127.0.0.1 1234 127.0.0.1 22'
     
     try:
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd='/Users/fabiomalagutti', env=env)
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=home_dir, env=env)
         stdout, stderr = proc.communicate(timeout=300)
         
         with open('/tmp/gemini_proxy_debug.log', 'a') as df:

@@ -9,7 +9,6 @@
 [![Cloud Backup](https://img.shields.io/badge/Backup-Google%20Drive%20(rclone)-yellow?logo=google-drive&style=for-the-badge)](https://rclone.org)
 [![CI](https://github.com/fabiomalagutti27-droid/apple-silicon-ai-workstation/actions/workflows/ci.yml/badge.svg)](https://github.com/fabiomalagutti27-droid/apple-silicon-ai-workstation/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
-[![UniBo](https://img.shields.io/badge/Affiliation-Alma%20Mater%20Studiorum%20UniBo-red.svg?style=for-the-badge)](https://www.unibo.it)
 
 ---
 
@@ -23,6 +22,18 @@ The architecture is designed to solve real-world bottlenecks encountered when ru
 * **Deterministic Zero-OOM Compilation:** A compiler wrapper (`cargo-uma`) that unloads active LLMs from VRAM in 250 ms before rustc/LLVM compiles heavy parallel workspaces, preventing system lockups and kernel panics.
 * **Stream-Safe Resource Partitioning:** Independent memory groups in `llama-swap` preventing VRAM contention between high-frequency triage routers (cloud proxy at 0 MB VRAM) and streaming execution workers (MoE 8-bit Q8 on Metal).
 * **Observation Masking & Context Compression:** Integrated regex densito-filtering (`log_pruner.py`, -92% token waste) and neural compression (LLMLingua-2, 50–65% ratio) preserving agent context windows.
+
+> [!NOTE]
+> ### 🖥️ Target Reference Machine (Author's Rig Specification)
+> All throughput benchmarks, memory allocations, and configuration files in this repository are verified on the author's primary compute node:
+> * **Hardware Model:** Apple Mac mini (`Mac17,16`, Darwin 27.2.0 arm64, Apple M5 Pro)
+> * **Processor:** 18 CPU Cores (High-Performance & High-Efficiency architecture)
+> * **Graphics Engine:** 20 GPU Cores with Metal 4 hardware acceleration (FP16/BF16/INT8)
+> * **Unified Memory Architecture (UMA):** 64 GB LPDDR5X (~307 GB/s memory bandwidth)
+> * **Local Storage:** 1 TB Apple Fabric NVMe SSD (~6.5 GB/s sequential read/write)
+> * **Wired Memory Ceiling:** `iogpu.wired_limit_mb=57344` (56 GB wired Metal allocation)
+> * **Operating System:** macOS Sequoia (Darwin 27.x)
+> * **Deployment Topology:** Headless 24/7 compute node running `llama-swap` (:8000), DeepSeek SuperAgent (:3082), and OpenCode (:49374), connected via private Tailscale WireGuard mesh.
 
 ---
 
@@ -129,7 +140,87 @@ Following recent empirical software engineering literature (*Mehboob et al., arX
 
 ---
 
-## 6. FastMCP Server Suite (`local_code_worker`)
+## 6. DeepSeek SuperAgent (Cordis) Autonomous Agent Architecture
+
+SuperAgent operates as an autonomous background engineering agent on the Mac mini host, managed by the Cordis runtime harness ([`configs/cordis.patch.yml.template`](configs/cordis.patch.yml.template)) on port `:3082`:
+
+```mermaid
+flowchart TD
+    subgraph INGRESS["1. Task Ingress & Triage"]
+        GH_Issue["GitHub Issue / Roadmap Ticket"]
+        TG_Cmd["Telegram Control Hub (/sa pause, resume, status)"]
+    end
+
+    subgraph ORCHESTRATION["2. Decoupled Cordis Engine (:3082)"]
+        DSH_Core["Orchestrator FIFO Queue (maxWorkers=1)"]
+        EvalModel["Triage Evaluator (gemini via proxy, 0 MB VRAM, 1M Context)"]
+    end
+
+    subgraph PREFLIGHT["3. Worktree Isolation & Memory Bank"]
+        PrepareHook["dsh_prepare_ticket.py Hook"]
+        Worktree["Isolated Git Worktree (dsh-workspace/tickets/...)"]
+        ProgressCheck{"Ticket already in progress.md?"}
+    end
+
+    subgraph WORKER["4. Tier 1: Local MoE ReAct Coding (Metal 4)"]
+        LocalWorker["Worker qwen35-core (35B-A3B MoE 8-bit Q8, ~60 tok/s)"]
+        PureCode["Syntactically Strict Code Generation (Zero-Panic, Bounded)"]
+        ACITool["submit_phase_pr (Single-Action Closing Tool)"]
+    end
+
+    subgraph BUILD["5. Zero-OOM Verification"]
+        CargoUma["cargo-uma test / build"]
+        Unload["POST /api/models/unload (0 GB VRAM)"]
+        Compile["LLVM / rustc Parallel Build (18 Cores, 58 GB UMA)"]
+    end
+
+    subgraph GATE["6. Tier 2 & Tier 3: Actor-Critic Gate"]
+        ReviewGate["agy_pr_review_gate.py (Diff Verification)"]
+        Approved{"Verdict: Approved?"}
+        OpenPR["GitHub PR Created (gh pr create)"]
+        Escalate["Auto-Escalation to Frontier Cloud after 2 Failed Rounds"]
+    end
+
+    INGRESS --> ORCHESTRATION --> PREFLIGHT
+    PrepareHook --> Worktree --> WORKER
+    ProgressCheck -- Yes --> Inactive["Skip Ticket"]
+    WORKER --> ACITool --> BUILD
+    CargoUma --> Unload --> Compile
+    BUILD --> GATE
+    ReviewGate --> Approved
+    Approved -- Yes --> OpenPR
+    Approved -- No --> LocalWorker
+    Approved -- Failed >=2 Rounds --> Escalate
+```
+
+### 6.1 Decoupled Orchestrator-Worker Pattern
+To prevent out-of-memory lockups and eliminate stream aborts, SuperAgent strictly decouples triage orchestration from deep code generation:
+* **Orchestrator (`gemini` Frontier Proxy):** Evaluates incoming tickets, plans task decompositions, and manages state transitions at **0 MB VRAM** with a 1,000,000-token context window via [`bin/gemini_proxy.py`](bin/gemini_proxy.py).
+* **Execution Worker (`qwen35-core` 8-bit Q8 on Metal):** Executes the iterative ReAct coding loop with 131,072 context on Metal. The 8-bit quantization is essential to eliminate borrow-checker and syntax failures in compiled languages (SWE-bench pass rate: 73.4% vs 41.2% for 4-bit).
+
+### 6.2 Pre-Flight Isolation & State Integrity (`dsh_prepare_ticket.py`)
+Before spawning any agent workspace, the lifecycle hook executes:
+1. **Deduplication Check:** Inspects `memory-bank/progress.md` to guarantee that previously resolved or invalid tickets are dropped immediately without consuming compute.
+2. **Worktree Isolation:** Creates a completely isolated Git worktree (`dsh-workspace/tickets/<ticket-id>`), preventing interference with parallel developer branches.
+
+### 6.3 Agent-Computer Interface (ACI): Single-Action Closing Tool (`submit_phase_pr`)
+Following SWE-agent architectural paradigms (*Yang et al., arXiv:2405.15793*), unbounded shell access (`bash`, `git`, `gh`) leads to agent turn exhaustion due to malformed escapes and interactive flags. The deterministic [`integrations/submit_phase_pr.py`](integrations/submit_phase_pr.py) script encapsulates:
+1. **Zero-OOM Pre-Flight Test:** Automatically flushes VRAM via `cargo-uma test` to dedicate all 18 CPU cores and 58 GB UMA to the test suite.
+2. **Selective Staging & Conventional Commit:** Stages only relevant source files (excluding temporary artifacts) and formats standard conventional commits (`feat(phase-XXX): ...`).
+3. **Atomic Push & PR Initiation:** Pushes branch to origin and delegates PR creation directly into the Actor-Critic gate.
+
+### 6.4 Actor-Critic Verification Gate (`agy_pr_review_gate.py`)
+Every pull request is intercepted by an automated Actor-Critic reviewer before publication:
+* **Tier 1 (Local Actor):** `qwen35-core` writes implementation and passes local test suites.
+* **Tier 2 (Critic Review Gate):** [`integrations/agy_pr_review_gate.py`](integrations/agy_pr_review_gate.py) submits the `git diff` to Antigravity CLI (`agy` with Gemini 3.8 Flash High) to verify memory bounds, index calculations, and architecture conformance.
+* **Tier 3 (Automated Escalation):** If the local worker fails to resolve review feedback within **2 consecutive review rounds**, the task automatically escalates to Frontier Cloud (`agy-worker`) for automated resolution and Telegram notification.
+
+### 6.5 Live Web & TUI Telemetry Dashboard (:3082)
+The runtime serves a real-time HTTP/WebSocket dashboard (`0.0.0.0:3082`) accessible from the thin client via SSH tunnel (`dsh-dashboard`), displaying live FIFO ticket status, UMA memory consumption, and active inference metrics.
+
+---
+
+## 7. FastMCP Server Suite (`local_code_worker`)
 
 The unified FastMCP server ([`mcp/local_code_worker/server.py`](mcp/local_code_worker/server.py)) exposes 8 specialized tools to Goose, OpenCode, Obsidian Copilot, and SuperAgent:
 
@@ -144,7 +235,7 @@ The unified FastMCP server ([`mcp/local_code_worker/server.py`](mcp/local_code_w
 
 ---
 
-## 7. Quickstart: One-Touch Makefile & Manual Setup
+## 8. Quickstart: One-Touch Makefile & Manual Setup
 
 ### Option A: Frictionless Makefile CLI (Recommended)
 ```bash
@@ -175,7 +266,7 @@ bash scripts/install_services.sh
 
 ---
 
-## 8. Total Cost of Ownership (TCO): Mac mini M5 Pro vs. Cloud GPU
+## 9. Total Cost of Ownership (TCO): Mac mini M5 Pro vs. Cloud GPU
 
 Running continuous 24/7 agentic loops on commercial cloud infrastructure (RunPod / AWS) introduces recurring monthly bills:
 
@@ -183,13 +274,15 @@ Running continuous 24/7 agentic loops on commercial cloud infrastructure (RunPod
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **AWS EC2 / RunPod (1× A100 80GB)** | $0 | N/A | **$800 – $1,200/mo** | **$9,600 – $14,400** | Never (Recurring) |
 | **DIY Dual RTX 3090 Rig** | ~$2,300 | ~80W (Idle) | ~$35/mo (Power) | ~$2,720 | ~90 days |
-| **Apple Mac mini M5 Pro (64 GB UMA)** | **~€ 2,100** | **< 7W (Idle)** | **~€ 3.20/mo (Power)** | **~€ 2,138** | **~60 Days vs. Cloud** |
+| **Apple Mac mini M5 Pro (64 GB UMA, 1 TB SSD)** | **~€ 2,849 – € 3,079** | **< 7W (Idle)** | **~€ 3.20/mo (Power)** | **~€ 2,887 – € 3,117** | **~75–90 Days vs. Cloud** |
 
-*Operational Takeaway:* The Mac mini M5 Pro pays for itself within ~60 days of persistent autonomous development while operating whisper-quiet (<18 dBA) on a standard desk.
+> 💡 *Note on Hardware Pricing:* The Mac mini price reflects official Apple Store Italy CTO pricing (Apple M5 Pro with 64 GB unified memory upgrade and 1 TB SSD, 22% VAT included).
+> 
+> *Operational Takeaway:* The Mac mini M5 Pro pays for itself within ~75 to 90 days of persistent autonomous development while operating whisper-quiet (<18 dBA) on a standard desk.
 
 ---
 
-## 9. Automated Weekly Cloud Backup (Google Drive via rclone)
+## 10. Automated Weekly Cloud Backup (Google Drive via rclone)
 
 To prevent wasting cloud storage on reproducible model weights (~150 GB), the backup routine archives only configurations, source code, registries, LaunchAgents, and the Obsidian Vault:
 
@@ -207,7 +300,7 @@ make backup
 
 ---
 
-## 10. Security, Privacy & Zero-Trust Verification
+## 11. Security, Privacy & Zero-Trust Verification
 
 * **Zero Leaked Credentials:** All configurations use environment variable expansion (`${HOME}`, `${MAC_MINI_HOST}`).
 * **Telegram Bot Zero-Trust Middleware:** Inbound messages are filtered against `ALLOWED_TELEGRAM_USER_ID`, silently dropping unauthenticated requests.
@@ -215,7 +308,7 @@ make backup
 
 ---
 
-## 11. Repository File Structure
+## 12. Repository File Structure
 
 ```
 apple-silicon-ai-workstation/
@@ -269,26 +362,7 @@ apple-silicon-ai-workstation/
 
 ---
 
-## 12. License & Citation
-├── configs/
-│   ├── llama-swap.yaml.template    # UMA single-model & group router configuration
-│   ├── cordis.patch.yml.template   # DeepSeek SuperAgent Cordis configuration
-│   └── launchd/                    # Portable launchd templates
-│       ├── com.localai.wiredlimit.plist.template
-│       ├── com.localai.llamaswap.plist.template
-│       ├── com.ai.ecosystem.bot.plist.template
-│       ├── com.ai.ecosystem.digest.plist.template
-│       └── com.ai.ecosystem.backup.plist.template
-└── scripts/
-    ├── setup_wired_limit.sh        # Kernel tuning installer for wired memory
-    ├── download_models.sh          # Batch downloader from Hugging Face
-    ├── install_services.sh         # LaunchAgents installer with path interpolation
-    └── backup_to_gdrive.sh         # Compressed weekly backup & rclone sync
-```
-
----
-
-## 11. License & Citation
+## 13. License & Citation
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
@@ -302,7 +376,6 @@ If you utilize this architecture or blueprint in your research or local infrastr
   year         = {2026},
   publisher    = {GitHub},
   journal      = {GitHub repository},
-  howpublished = {\url{https://github.com/fabiomalagutti27-droid/apple-silicon-ai-workstation}},
-  institution  = {Alma Mater Studiorum -- Universit{\`a} di Bologna}
+  howpublished = {\url{https://github.com/fabiomalagutti27-droid/apple-silicon-ai-workstation}}
 }
 ```

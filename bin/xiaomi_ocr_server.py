@@ -12,6 +12,7 @@ import re
 import sys
 import time
 from aiohttp import web
+from pathlib import Path
 from PIL import Image
 import torch
 from transformers import AutoModelForImageTextToText, AutoProcessor
@@ -19,7 +20,7 @@ from transformers import AutoModelForImageTextToText, AutoProcessor
 parser = argparse.ArgumentParser(description="Xiaomi-OCR-0 OpenAI-compatible server")
 parser.add_argument("--host", type=str, default="127.0.0.1")
 parser.add_argument("--port", type=int, default=8015)
-parser.add_argument("--model-path", type=str, default="/Users/fabiomalagutti/.models/xiaomi-ocr-0")
+parser.add_argument("--model-path", type=str, default=str(Path.home() / ".models/xiaomi-ocr-0"))
 args = parser.parse_args()
 
 print(f"Loading Xiaomi-OCR-0 from {args.model_path} onto Apple Metal MPS...")

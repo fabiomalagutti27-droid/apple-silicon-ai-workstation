@@ -101,7 +101,7 @@ Running persistent autonomous agents (like DeepSeek SuperAgent polling GitHub an
   * Average cost: ~$1.10 – $1.85 / hour.
   * Monthly 24/7 bill: **$790 – $1,330 / month**.
   * Annual cost: **$9,480 – $15,960 / year**.
-* **Apple Mac mini M5 Pro (64 GB UMA) Owned Node:**
-  * Upfront Hardware Investment: **~€ 2,100**.
-  * Operational Cost: Zero token fees for local workers + negligible electricity (~€38/year).
-  * **Break-Even Point (ROI):** Achieved within **50 to 75 days** of continuous autonomous development.
+* **Apple Mac mini M5 Pro (64 GB UMA, 1 TB SSD) Reference Node:**
+  * Upfront Hardware Investment: **~€ 2,849 – € 3,079** (Official Apple Store Italy CTO pricing with 64 GB unified memory and 1 TB SSD, VAT included).
+  * Operational Cost: Zero token fees for local MoE workers + negligible electricity (<7W idle, ~€38/year).
+  * **Break-Even Point (ROI):** Achieved within **75 to 90 days** (2.5 to 3 months) vs. recurring cloud GPU rental ($800–$1,300/mo).
