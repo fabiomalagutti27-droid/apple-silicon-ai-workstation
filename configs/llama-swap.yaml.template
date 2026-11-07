@@ -1,0 +1,94 @@
+# ==============================================================================
+# llama-swap.yaml.template - Router UMA Single-Model & Groups per Apple Silicon
+# Copia questo file in ~/.config/llama-swap/config.yaml
+# ==============================================================================
+listen: 0.0.0.0:8000
+startPort: 8010
+includeAliasesInList: true
+
+models:
+  qwen35-fast:
+    cmd: /Users/fabiomalagutti/ai-env/bin/rapid-mlx serve ${HOME}/.models/qwen3.6-35b-a3b-mlx-4bit
+      --served-model-name qwen35-fast --host 127.0.0.1 --port ${PORT} --cors-origins "*"
+      --allow-unauthenticated-public --trusted-hosts localhost 127.0.0.1 "*"
+      --resident-memory-limit-gb 56 --context-length 131072 --enable-prefix-cache
+    useModelName: qwen35-fast
+    aliases:
+      - fast
+      - qwen-fast
+      - qwen3.6-35b-4bit
+    checkEndpoint: /health
+    ttl: 600
+
+  qwen35-core:
+    cmd: /Users/fabiomalagutti/ai-env/bin/rapid-mlx serve ${HOME}/.models/qwen3.6-35b-a3b-mlx-8bit
+      --served-model-name qwen35-core --host 127.0.0.1 --port ${PORT} --cors-origins "*"
+      --allow-unauthenticated-public --trusted-hosts localhost 127.0.0.1 "*"
+      --resident-memory-limit-gb 56 --context-length 131072 --gpu-memory-utilization 0.92
+      --enable-prefix-cache
+    useModelName: qwen35-core
+    aliases:
+      - core
+      - qwen-core
+      - qwen3.6-35b-8bit
+    checkEndpoint: /health
+    ttl: 600
+
+  gemma4-moe:
+    cmd: /Users/fabiomalagutti/ai-env/bin/rapid-mlx serve ${HOME}/.models/gemma-4-26b-a4b-mlx-8bit
+      --served-model-name gemma4-moe --host 127.0.0.1 --port ${PORT} --cors-origins "*"
+      --allow-unauthenticated-public --trusted-hosts localhost 127.0.0.1 "*"
+      --resident-memory-limit-gb 56 --context-length 65536 --gpu-memory-utilization 0.85
+      --enable-prefix-cache
+    useModelName: gemma4-moe
+    aliases:
+      - gemma
+      - gemma4
+    checkEndpoint: /health
+    ttl: 600
+
+  bolt74b:
+    cmd: /Users/fabiomalagutti/ai-env/bin/rapid-mlx serve ${HOME}/.models/nemotron-3.5-bolt-74b-a9b-mlx-4bit
+      --served-model-name bolt74b --host 127.0.0.1 --port ${PORT} --cors-origins "*"
+      --allow-unauthenticated-public --trusted-hosts localhost 127.0.0.1 "*"
+      --resident-memory-limit-gb 56 --context-length 32768 --gpu-memory-utilization 0.90
+      --kv-cache-dtype int8 --enable-prefix-cache
+    useModelName: bolt74b
+    aliases:
+      - bolt
+      - nemotron
+    checkEndpoint: /health
+    ttl: 600
+
+  xiaomi-ocr:
+    cmd: python ${HOME}/bin/xiaomi_ocr_server.py --port ${PORT}
+    useModelName: xiaomi-ocr
+    aliases:
+      - ocr
+      - xiaomi-ocr-0
+    checkEndpoint: /health
+    ttl: 600
+
+  gemini:
+    cmd: python ${HOME}/bin/gemini_proxy.py --port ${PORT}
+    useModelName: gemini
+    aliases:
+      - gemini-3.8-flash-high
+    checkEndpoint: /health
+    ttl: 300
+
+groups:
+  cloud:
+    exclusive: false
+    swap: false
+    members:
+      - gemini
+  local:
+    exclusive: false
+    swap: true
+    members:
+      - qwen35-fast
+      - qwen35-core
+      - gemma4-moe
+      - bolt74b
+      - xiaomi-ocr

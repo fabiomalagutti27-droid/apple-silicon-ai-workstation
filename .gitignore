@@ -1,0 +1,66 @@
+# ==============================================================================
+# .gitignore - Apple Silicon AI Workstation
+# Protezione assoluta contro fughe di credenziali, token e pesi giganti dei modelli
+# ==============================================================================
+
+# File di ambiente e credenziali
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.token
+*token*
+!*.token.example
+
+# Token OAuth e directory agent
+.gemini/
+.claude/
+.artifacts/
+.dsh/state/
+.config/gh-agent/hosts.yml
+antigravity-oauth-token
+
+# Pesi dei modelli (NON committare mai centinaia di GB di pesi)
+models/
+*.models/
+*.bin
+*.safetensors
+*.gguf
+*.pt
+*.onnx
+
+# Cache e dati temporanei
+.cache/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+*.log
+*.err.log
+
+# Database SQLite di runtime e stati asincroni
+*.sqlite
+*.sqlite3
+*.db
+bridge_registry.sqlite
+
+# Build artifacts Rust e Node
+target/
+node_modules/
+dist/
+build/
+
+# macOS scorie di sistema
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Virtual environments
+venv/
+.venv/
+ai-env/
+env/

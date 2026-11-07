@@ -1,0 +1,77 @@
+# ==============================================================================
+# cordis.patch.yml.template - Profilo Cordis / DeepSeek SuperAgent
+# Configura provider OpenAI-compatible locale e disabilita telemetria
+# Copia questo file in ~/.dsh/profiles/superagent/cordis.patch.yml
+# ==============================================================================
+- id: webserver
+  config:
+    host: 0.0.0.0
+    port: 3082
+
+- id: dsh-superagent
+  config:
+    stateDir: ${HOME}/.dsh/state/superagent
+
+- id: session-log-deepseek
+  disabled: true
+
+- id: session-telemetry-otel
+  disabled: true
+
+- id: desktop-product-telemetry
+  disabled: true
+
+- id: llm-pi-ai
+  config:
+    providers:
+      macmini-local:
+        displayName: Apple Silicon Local Compute Node (llama-swap)
+        api: openai-completions
+        baseURL: http://127.0.0.1:8000/v1
+        apiKeyEnv: LOCAL_LLM_KEY
+        headers:
+          authorization: Bearer unused
+        streamIdleTimeoutMs: 900000
+        models:
+          - id: qwen35-fast
+            name: Qwen3.6 35B-A3B Q4 (Fast ReAct 99 tok/s)
+            contextWindow: 131072
+            maxTokens: 16384
+            input: [text]
+          - id: qwen35-core
+            name: Qwen3.6 35B-A3B Q8 (Core Architect FP16 60 tok/s)
+            contextWindow: 131072
+            maxTokens: 16384
+            input: [text]
+          - id: gemma4-moe
+            name: Gemma 4 26B-A4B Q8 (Multimodal Lecturer 43 tok/s)
+            contextWindow: 65536
+            maxTokens: 16384
+            input: [text]
+          - id: bolt74b
+            name: Nemotron 3.5 Bolt 74B A9B (Local Frontier 35 tok/s)
+            contextWindow: 32768
+            maxTokens: 8192
+            input: [text]
+          - id: gemini
+            name: ⚡️ Gemini 3.8 Flash (High) - Antigravity Proxy
+            contextWindow: 1048576
+            maxTokens: 65536
+            input: [text]
+
+- id: agent-default-model
+  config:
+    provider: macmini-local
+    model: qwen35-core
+
+- id: dsh-plugin-m5-monitor
+  name: dsh-plugin-m5-monitor
+
+- id: mcp-local-worker
+  name: '@deepseek-ai/dsh-mcp-client'
+  config:
+    serverName: local_code_worker
+    transport: stdio
+    command: python
+    args:
+      - ${HOME}/ai-ecosystem/mcp_servers/local_code_worker/server.py

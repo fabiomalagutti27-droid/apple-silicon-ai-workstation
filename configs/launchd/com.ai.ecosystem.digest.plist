@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.ai.ecosystem.digest</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/fabiomalagutti/ai-env/bin/python3</string>
+        <string>/Users/fabiomalagutti/ai-ecosystem/digest/run_digest.py</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/fabiomalagutti/ai-ecosystem</string>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>7</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>PYTHONPATH</key>
+        <string>/Users/fabiomalagutti/ai-ecosystem</string>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>/Users/fabiomalagutti/ai-ecosystem/digest.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/fabiomalagutti/ai-ecosystem/digest.err.log</string>
+</dict>
+</plist>
