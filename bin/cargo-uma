@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# cargo-uma: Scarica la VRAM di llama-swap prima di saturare i 18 core CPU e 64 GB UMA con LLVM
+set -e
+curl -s -X POST http://127.0.0.1:8000/api/models/unload >/dev/null 2>&1 || true
+sleep 0.2
+exec cargo "$@"

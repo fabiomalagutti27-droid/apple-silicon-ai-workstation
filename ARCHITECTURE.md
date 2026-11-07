@@ -12,12 +12,12 @@
 > ╚═══════════════════════════════════════════════════════════════════════════════════════╝
 > ```
 > **Data Ultima Certificazione Live:** Sabato 7 Novembre 2026  
-> **Host Verificato:** `Mac-mini.station` (`100.73.59.49` alias `macmini`, macOS Darwin 27.2.0 arm64)  
+> **Host Verificato:** `Mac-mini.station` (`100.x.y.z` alias `macmini`, macOS Darwin 27.2.0 arm64)  
 > **Esito Audit Ecosistema:** **100% OPERATIVO E ALLINEATO ALLA REALTÀ OPERATIVA**
 
 **Target di Calcolo Primario:** Apple Mac mini M5 Pro (64 GB UMA, 18 CPU Core, 20 GPU Core, SSD NVMe ~6.5 GB/s)  
 **Developer Station / Client GUI:** Apple MacBook Air M1 (Thin Client & Controller Locale)  
-**Topologia di Rete:** Tailscale WireGuard Mesh Privata (`100.73.59.49` alias `macmini`, P2P crittografato)  
+**Topologia di Rete:** Tailscale WireGuard Mesh Privata (`100.x.y.z` alias `macmini`, P2P crittografato)  
 **Data di Riferimento & Audit:** 7 Novembre 2026  
 **Autore:** Antigravity AI Systems Engineering Team  
 
@@ -40,7 +40,7 @@ flowchart TB
     end
 
     subgraph Mesh["Rete Mesh Privata WireGuard (Tailscale)"]
-        Tunnel["Canale Diretto P2P Crittografato: 100.73.59.49 (Latenza < 1.2ms)"]
+        Tunnel["Canale Diretto P2P Crittografato: 100.x.y.z (Latenza < 1.2ms)"]
         SyncMesh["Syncthing P2P Mesh (Porta 22000 / 8384)"]
     end
 
@@ -132,7 +132,7 @@ In un'architettura multi-agente asincrona come DeepSeek SuperAgent (Cordis), l'*
 Se Orchestrator e Worker utilizzassero due modelli pesanti differenti all'interno di un gruppo esclusivo di `llama-swap`, l'interrogazione di triage dell'Orchestrator forzerebbe la deallocazione del modello del Worker a metà stream, causando il fallimento sistematico `LlmError: Internal error during streaming`.
 
 Per garantire **zero contesa di VRAM e continuità assoluta di streaming**, `llama-swap` implementa il partizionamento a gruppi:
-* **Gruppo `cloud` non-esclusivo (`exclusive: false`, `swap: false`):** Include `gemini` (Gemini 3.8 Flash High via proxy locale a **0 MB VRAM** su Account 2 `milagalindo@gmail.com`). L'Orchestrator esegue il triage ad altissima frequenza e con 1M token di contesto senza toccare la memoria Metal.
+* **Gruppo `cloud` non-esclusivo (`exclusive: false`, `swap: false`):** Include `gemini` (Gemini 3.8 Flash High via proxy locale a **0 MB VRAM** su Account 2 `<developer-cloud-account@gmail.com>`). L'Orchestrator esegue il triage ad altissima frequenza e con 1M token di contesto senza toccare la memoria Metal.
 * **Gruppo `local` (`exclusive: false`, `swap: true`):** Include i modelli pesanti Metal (`bolt74b`, `qwen35-fast`, `qwen35-core`, `gemma4-moe`). I Worker operano in streaming indisturbati all'interno della GPU Metal da 56 GB cablati senza subire mai deallocazioni arbitrarie.
 * **Invarianza della Compilazione:** L'Invariante B (`cargo-uma`) rimane sovrana: quando un Worker lancia la suite di test o la compilazione di crate pesanti, la VRAM locale viene deallocata all'istante, riservando i 58 GB di RAM unificata a rustc/LLVM sui 18 core CPU.
 
@@ -242,7 +242,7 @@ flowchart LR
 * **`dsh_prepare_ticket.py` ([`~/ai-ecosystem/integrations/dsh_prepare_ticket.py`](file:///Users/fabiomalagutti/ai-ecosystem/integrations/dsh_prepare_ticket.py)):**
   Hook `executor.prepare` di SuperAgent che crea un worktree isolato basato sull'ultimo `origin/main` (condividendo la cache `target/` NVMe) ed esegue il controllo **Pre-Flight State Reconciliation**: scarta automaticamente (`state="dropped"`) qualsiasi ticket la cui Fase risulti già completata (`[x]`) in `memory-bank/progress.md` o che sia marcato `[COMPILE-ONLY]`.
 * **`compile_only_runner.py` ([`~/ai-ecosystem/integrations/compile_only_runner.py`](file:///Users/fabiomalagutti/ai-ecosystem/integrations/compile_only_runner.py)):**
-  Build Farm Read-Only attivabile da Alessandro (`@MiServeRDC`) o Fabio tramite GitHub Issue con tag `[COMPILE-ONLY]`, `[BUILD-ONLY]` o `[TEST-ONLY]`. Esegue `cargo-uma` in un worktree detached in sola lettura (zero modifiche al codice), commenta il report sulla Issue GitHub e invia automaticamente il resoconto via Email (Gmail API) ad Alessandro (`aleeesandronicolini@gmail.com`) e Fabio (`fabiomalagutti27@gmail.com`).
+  Build Farm Read-Only attivabile da Alessandro (`@collaborator`) o Fabio tramite GitHub Issue con tag `[COMPILE-ONLY]`, `[BUILD-ONLY]` o `[TEST-ONLY]`. Esegue `cargo-uma` in un worktree detached in sola lettura (zero modifiche al codice), commenta il report sulla Issue GitHub e invia automaticamente il resoconto via Email (Gmail API) ad Alessandro (`<collaborator@example.com>`) e Fabio (`<maintainer@example.com>`).
 * **`gemini_proxy.py` ([`~/bin/gemini_proxy.py`](file:///Users/fabiomalagutti/bin/gemini_proxy.py)):**
   Micro-server FastAPI in ascolto su porta dinamica gestita da `llama-swap`. Espone le API standard `/v1/chat/completions` e `/v1/models` (`gemini`, `gemini-3.8-flash-high`) riformattando le chiamate per la CLI `agy`, offrendo a qualsiasi client OpenAI-compatibile inferenza frontier gratuita.
 * **`xiaomi_ocr_server.py` ([`~/bin/xiaomi_ocr_server.py`](file:///Users/fabiomalagutti/bin/xiaomi_ocr_server.py)):**
@@ -257,7 +257,7 @@ flowchart LR
 ## 6. Sottosistemi di Telemetria, Automazione & Sincronizzazione
 
 ### 6.1 DeepSeek SuperAgent Runtime, Profili Operativi & Dashboard Web
-SuperAgent opera sul Mac mini orchestrato dal framework Cordis ([`~/.dsh/profiles/superagent/cordis.patch.yml`](file:///Users/fabiomalagutti/.dsh/profiles/superagent/cordis.patch.yml)) in ascolto su `100.73.59.49:3082`.
+SuperAgent opera sul Mac mini orchestrato dal framework Cordis ([`~/.dsh/profiles/superagent/cordis.patch.yml`](file:///Users/fabiomalagutti/.dsh/profiles/superagent/cordis.patch.yml)) in ascolto su `100.x.y.z:3082`.
 
 #### A. Policy di Privacy Hardening Integrata
 Nel file di configurazione Cordis sono esplicitamente disabilitate tutte le telemetrie verso server remoti esterni:
@@ -272,7 +272,7 @@ Nel file di configurazione Cordis sono esplicitamente disabilitate tutte le tele
 
 #### B. Modelli Disaccoppiati: Orchestrator (`gemini` Frontier 0€) & Worker (`qwen35-core` Metal MoE 8-bit Q8)
 Configurato per garantire stabilità a zero stream abort, immunità OOM, massima fedeltà algebrica e zero context drift:
-* **Orchestrator Model:** `gemini` (Gemini 3.8 Flash High via proxy locale `gemini_proxy.py` a **0 MB VRAM** su Account 2 `milagalindo@gmail.com`). Gestisce in tempo reale il flusso asincrono di triage, policy evaluation e routing con finestra di contesto da 1.000.000 di token a latenza sub-second.
+* **Orchestrator Model:** `gemini` (Gemini 3.8 Flash High via proxy locale `gemini_proxy.py` a **0 MB VRAM** su Account 2 `<developer-cloud-account@gmail.com>`). Gestisce in tempo reale il flusso asincrono di triage, policy evaluation e routing con finestra di contesto da 1.000.000 di token a latenza sub-second.
 * **Worker Default Model (`agent-default-model` & `orchestrator.sqlite`):** `qwen35-core` (Qwen 3.6 35B-A3B MoE MLX 8-bit Q8, footprint di **~38.7 GB VRAM**, finestra di contesto a **131.072 token** [128k], velocità di generazione a **~55–62 tok/s**).
   - *Validazione Scientifica della Quantizzazione 8-bit nei Coding Agents:*
     1. **Tasso di Risoluzione One-Shot e Spirali di Errore:** Come dimostrato empiricamente da Mehboob et al. (*"Beyond Accuracy: How Quantization Affects Coding Agents"*, Novembre 2026, [arXiv:2611.02368](https://arxiv.org/abs/2611.02368)), la quantizzazione a 4-bit (AWQ/GPTQ) altera negativamente la traiettoria ReAct degli agenti di programmazione. Nei compiti di ingegneria del software complessi (OJBench, SWE-bench), il tasso di risoluzione al primo colpo (*one-shot pass rate*) crolla vertiginosamente: i modelli 4-bit generano un numero sensibilmente maggiore di errori di sintassi e discrepanze di tipo Rust (`error[E0308]`, `error[E0599]`), costringendo l'agente a lunghi cicli di prova-ed-errore che esauriscono rapidamente il budget di turni operativi.
@@ -492,7 +492,7 @@ Schedulata dal LaunchAgent [`com.ai.ecosystem.digest.plist`](file:///Users/fabio
 ## 7. Struttura del File System e Mappa delle Directory
 
 ```
-MAC MINI M5 PRO (Compute Host - 100.73.59.49)
+MAC MINI M5 PRO (Compute Host - 100.x.y.z)
 ├── /Library/LaunchDaemons/
 │   ├── com.localai.wiredlimit.plist           # Kernel tuning: iogpu.wired_limit_mb=57344
 │   └── sh.brew.tailscale.plist                # Daemon Tailscale WireGuard mesh

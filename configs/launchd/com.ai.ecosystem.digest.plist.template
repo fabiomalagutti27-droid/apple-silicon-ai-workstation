@@ -3,21 +3,18 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.ai.ecosystem.backup</string>
+    <string>com.ai.ecosystem.digest</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/bin/bash</string>
-        <string>/Users/fabiomalagutti/Vault/02_Progetti/AI_Ecosystem/apple-silicon-ai-workstation/scripts/backup_to_gdrive.sh</string>
+        <string>__USER_HOME__/ai-env/bin/python3</string>
+        <string>__USER_HOME__/ai-ecosystem/digest/run_digest.py</string>
     </array>
     <key>WorkingDirectory</key>
-    <string>/Users/fabiomalagutti</string>
-    <!-- Esecuzione settimanale: Ogni domenica alle ore 03:00 AM -->
+    <string>__USER_HOME__/ai-ecosystem</string>
     <key>StartCalendarInterval</key>
     <dict>
-        <key>Weekday</key>
-        <integer>0</integer>
         <key>Hour</key>
-        <integer>3</integer>
+        <integer>7</integer>
         <key>Minute</key>
         <integer>0</integer>
     </dict>
@@ -25,12 +22,12 @@
     <dict>
         <key>PATH</key>
         <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
-        <key>HOME</key>
-        <string>/Users/fabiomalagutti</string>
+        <key>PYTHONPATH</key>
+        <string>__USER_HOME__/ai-ecosystem</string>
     </dict>
     <key>StandardOutPath</key>
-    <string>/Users/fabiomalagutti/.ai-backups/backup.log</string>
+    <string>__USER_HOME__/ai-ecosystem/digest.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/fabiomalagutti/.ai-backups/backup.err.log</string>
+    <string>__USER_HOME__/ai-ecosystem/digest.err.log</string>
 </dict>
 </plist>

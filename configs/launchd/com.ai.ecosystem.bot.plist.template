@@ -6,11 +6,11 @@
     <string>com.ai.ecosystem.bot</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/fabiomalagutti/ai-env/bin/python3</string>
-        <string>/Users/fabiomalagutti/ai-ecosystem/telegram_bot/bot.py</string>
+        <string>__USER_HOME__/ai-env/bin/python3</string>
+        <string>__USER_HOME__/ai-ecosystem/telegram_bot/bot.py</string>
     </array>
     <key>WorkingDirectory</key>
-    <string>/Users/fabiomalagutti/ai-ecosystem</string>
+    <string>__USER_HOME__/ai-ecosystem</string>
     <key>RunAtLoad</key>
     <true/>
     <key>KeepAlive</key>
@@ -23,13 +23,13 @@
     <key>EnvironmentVariables</key>
     <dict>
         <key>PATH</key>
-        <string>/Users/fabiomalagutti/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <string>__USER_HOME__/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
         <key>PYTHONPATH</key>
-        <string>/Users/fabiomalagutti/ai-ecosystem</string>
+        <string>__USER_HOME__/ai-ecosystem</string>
     </dict>
     <key>StandardOutPath</key>
-    <string>/Users/fabiomalagutti/ai-ecosystem/bot.log</string>
+    <string>__USER_HOME__/ai-ecosystem/bot.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/fabiomalagutti/ai-ecosystem/bot.err.log</string>
+    <string>__USER_HOME__/ai-ecosystem/bot.err.log</string>
 </dict>
 </plist>
