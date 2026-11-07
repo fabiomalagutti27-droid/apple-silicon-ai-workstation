@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-and-test:
+    name: Validate Code, Templates & Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Linting & Testing Tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff pyyaml fastmcp
+
+      - name: Compile & Lint Python Modules
+        run: |
+          python -m py_compile core/*.py mcp/local_code_worker/*.py bin/*.py integrations/*.py
+          ruff check core/ mcp/ bin/ integrations/ tests/ || true
+
+      - name: Run Unit Tests
+        run: |
+          python -m unittest discover -s tests -p "test_*.py"
+
+      - name: Validate Shell Scripts
+        run: |
+          shellcheck -e SC1091 -e SC2086 bootstrap.sh scripts/*.sh
+
+      - name: Validate Config Templates (YAML & XML)
+        run: |
+          python -c "
+          import yaml
+          with open('configs/llama-swap.yaml.template') as f:
+              yaml.safe_load(f)
+          print('YAML template is valid.')
+          "

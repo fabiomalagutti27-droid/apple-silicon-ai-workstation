@@ -1,0 +1,62 @@
+name: 📊 Benchmark Submission
+description: Submit verified tok/s, TTFT, or memory measurements from your Apple Silicon Mac
+title: "[Benchmark]: "
+labels: ["benchmark", "community-verified"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for contributing empirical numbers! Accepted submissions are reviewed and added to `BENCHMARKS.md` and the hardware sizing matrix.
+
+  - type: input
+    id: mac_model
+    attributes:
+      label: Mac Hardware Model
+      description: e.g. Mac mini M5 Pro, Mac Studio M2 Max, MacBook Pro M4 Pro
+      placeholder: Apple Mac mini M5 Pro (64 GB UMA)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: chip_generation
+    attributes:
+      label: Apple Silicon Generation
+      options:
+        - M5 Pro / Max
+        - M4 / M4 Pro / M4 Max
+        - M3 / M3 Pro / M3 Max
+        - M2 / M2 Pro / M2 Max / M2 Ultra
+        - M1 / M1 Pro / M1 Max / M1 Ultra
+    validations:
+      required: true
+
+  - type: input
+    id: tested_model
+    attributes:
+      label: Model Name & Quantization
+      description: e.g. Qwen3.6-35B-A3B (MLX 8-bit Q8), Nemotron-3.5-Bolt-74B (MLX 4-bit)
+      placeholder: Qwen 3.6 35B-A3B (MLX 8-bit Q8)
+    validations:
+      required: true
+
+  - type: input
+    id: decode_speed
+    attributes:
+      label: Decode Throughput (tok/s)
+      description: Measured generation speed in tokens per second
+      placeholder: "61.4 tok/s"
+    validations:
+      required: true
+
+  - type: input
+    id: ttft
+    attributes:
+      label: Time To First Token (TTFT in ms)
+      placeholder: "107 ms (Warm prefix) / 1,840 ms (Cold)"
+
+  - type: textarea
+    id: context_notes
+    attributes:
+      label: Methodology & Additional Notes
+      description: Context length used, engine flags (e.g. kv-cache int8, prefix-cache), OS version
+      placeholder: "Tested with rapid-mlx on macOS 27.2.0 with --enable-prefix-cache and 131k context length."

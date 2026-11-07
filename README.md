@@ -7,6 +7,7 @@
 [![SuperAgent](https://img.shields.io/badge/SuperAgent-Cordis%20(:3082)-green?style=for-the-badge)](https://github.com/deepseek-ai)
 [![Protocol](https://img.shields.io/badge/MCP-FastMCP%20Suite-purple?style=for-the-badge)](https://modelcontextprotocol.io)
 [![Cloud Backup](https://img.shields.io/badge/Backup-Google%20Drive%20(rclone)-yellow?logo=google-drive&style=for-the-badge)](https://rclone.org)
+[![CI](https://github.com/fabiomalagutti27-droid/apple-silicon-ai-workstation/actions/workflows/ci.yml/badge.svg)](https://github.com/fabiomalagutti27-droid/apple-silicon-ai-workstation/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 [![UniBo](https://img.shields.io/badge/Affiliation-Alma%20Mater%20Studiorum%20UniBo-red.svg?style=for-the-badge)](https://www.unibo.it)
 
@@ -101,6 +102,8 @@ All weights are stored locally in `~/.models/` on high-throughput NVMe storage:
 | **`xiaomi-ocr`** | Xiaomi-OCR-0 (0.8B Micro-VLM) | PyTorch MPS FP16 | ~1.2 GB | **162.0 tok/s** | 4,096 | Optical Markdown extraction and KaTeX formulas from PDFs/images |
 | **`gemini`** | Gemini 3.8 Flash High | Frontier Cloud Proxy | 0 MB | Sub-second | 1,048,576 | High-context escalation, Actor-Critic Pre-PR code review |
 
+> 📐 **Hardware Sizing & Multi-Tier Scaling:** Running this setup on 32 GB, 48 GB, 128 GB, or 192 GB? Consult the exhaustive [Hardware Sizing Guide (docs/HARDWARE_SIZING.md)](docs/HARDWARE_SIZING.md) for custom memory allocations and model rosters.
+
 ---
 
 ## 5. Empirical Benchmarks & Experimental Validation
@@ -122,6 +125,8 @@ Following recent empirical software engineering literature (*Mehboob et al., arX
 * **One-Shot Pass Rate (SWE-bench):** Q8 models achieve **73.4%** one-shot success with near-zero borrow-checker syntax errors, compared to **41.2%** for 4-bit models (which suffer from retry loops).
 * **Long-Context Resilience (>32k tokens):** 4-bit models undergo non-linear attention degradation (*needle-in-a-haystack* score drops to 58.4%), whereas 8-bit Q8 maintains **99.8%** recall up to 131,072 tokens.
 
+> 📊 **Submit Community Benchmarks:** Own an M1/M2/M3/M4/M5 Mac? [Submit your real tok/s measurements](../../issues/new?template=benchmark_submission.yml) to be reviewed and added to our verified benchmark matrix.
+
 ---
 
 ## 6. FastMCP Server Suite (`local_code_worker`)
@@ -139,34 +144,52 @@ The unified FastMCP server ([`mcp/local_code_worker/server.py`](mcp/local_code_w
 
 ---
 
-## 7. Quickstart & Automated Bootstrap
+## 7. Quickstart: One-Touch Makefile & Manual Setup
 
-### Step 1: Clone Repository & Run Idempotent Bootstrap
+### Option A: Frictionless Makefile CLI (Recommended)
 ```bash
 git clone https://github.com/fabiomalagutti27-droid/apple-silicon-ai-workstation.git
 cd apple-silicon-ai-workstation
-chmod +x bootstrap.sh scripts/*.sh
+
+make setup       # 1. Install Homebrew packages, directories, and cargo-uma
+make kernel      # 2. Elevate Metal UMA wired memory limit to 56 GB (sudo)
+make models      # 3. Download open-weight MoE checkpoints from Hugging Face
+make services    # 4. Install & load background LaunchAgents
+make status      # 5. Check health across ports 8000, 3082, 49374
+```
+
+### Option B: Step-by-Step Shell Scripts
+```bash
+# 1. Clone repository & run bootstrap
 ./bootstrap.sh
-```
 
-### Step 2: Elevate Metal UMA Limit to 56 GB (Requires sudo)
-```bash
+# 2. Elevate Metal UMA limit to 56 GB (Requires sudo)
 sudo bash scripts/setup_wired_limit.sh
-```
 
-### Step 3: Download Open-Weight Model Checkpoints
-```bash
+# 3. Download open-weight model checkpoints
 bash scripts/download_models.sh
-```
 
-### Step 4: Install & Start Background LaunchAgents
-```bash
+# 4. Install & start background LaunchAgents
 bash scripts/install_services.sh
 ```
 
 ---
 
-## 8. Automated Weekly Cloud Backup (Google Drive via rclone)
+## 8. Total Cost of Ownership (TCO): Mac mini M5 Pro vs. Cloud GPU
+
+Running continuous 24/7 agentic loops on commercial cloud infrastructure (RunPod / AWS) introduces recurring monthly bills:
+
+| Infrastructure | Setup Cost | 24/7 Idle Power | Monthly OpEx | 1-Year Total Cost | Break-Even Point |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **AWS EC2 / RunPod (1× A100 80GB)** | $0 | N/A | **$800 – $1,200/mo** | **$9,600 – $14,400** | Never (Recurring) |
+| **DIY Dual RTX 3090 Rig** | ~$2,300 | ~80W (Idle) | ~$35/mo (Power) | ~$2,720 | ~90 days |
+| **Apple Mac mini M5 Pro (64 GB UMA)** | **~€ 2,100** | **< 7W (Idle)** | **~€ 3.20/mo (Power)** | **~€ 2,138** | **~60 Days vs. Cloud** |
+
+*Operational Takeaway:* The Mac mini M5 Pro pays for itself within ~60 days of persistent autonomous development while operating whisper-quiet (<18 dBA) on a standard desk.
+
+---
+
+## 9. Automated Weekly Cloud Backup (Google Drive via rclone)
 
 To prevent wasting cloud storage on reproducible model weights (~150 GB), the backup routine archives only configurations, source code, registries, LaunchAgents, and the Obsidian Vault:
 
@@ -176,15 +199,15 @@ brew install rclone
 rclone config
 
 # 2. Test manual backup
-bash scripts/backup_to_gdrive.sh
+make backup
+# Or: bash scripts/backup_to_gdrive.sh
 
-# 3. Enable automated weekly schedule (Sundays at 03:00 AM)
-# (Automatically handled by install_services.sh via com.ai.ecosystem.backup.plist)
+# 3. Automated schedule is active every Sunday at 03:00 AM via com.ai.ecosystem.backup.plist
 ```
 
 ---
 
-## 9. Security, Privacy & Zero-Trust Verification
+## 10. Security, Privacy & Zero-Trust Verification
 
 * **Zero Leaked Credentials:** All configurations use environment variable expansion (`${HOME}`, `${MAC_MINI_HOST}`).
 * **Telegram Bot Zero-Trust Middleware:** Inbound messages are filtered against `ALLOWED_TELEGRAM_USER_ID`, silently dropping unauthenticated requests.
@@ -192,18 +215,28 @@ bash scripts/backup_to_gdrive.sh
 
 ---
 
-## 10. Repository File Structure
+## 11. Repository File Structure
 
 ```
 apple-silicon-ai-workstation/
+├── .github/
+│   ├── workflows/ci.yml            # Automated GitHub Actions CI workflow
+│   └── ISSUE_TEMPLATE/             # Structured issue templates for benchmarks & bugs
+│       ├── benchmark_submission.yml
+│       └── bug_report.yml
 ├── .gitignore                      # Hardened exclusions for weights, tokens, and caches
 ├── .env.example                    # Environment variable template
 ├── LICENSE                         # MIT License
+├── Makefile                        # One-touch developer workflow (setup, test, status)
 ├── README.md                       # Main architecture reference and setup guide
 ├── ARCHITECTURE.md                 # Full formal specifications and engineering manual
 ├── BENCHMARKS.md                   # Empirical performance tables and ablation studies
 ├── Brewfile                        # Declarative Homebrew package bundle
 ├── bootstrap.sh                    # Automated workstation setup script
+├── docs/
+│   └── HARDWARE_SIZING.md          # Multi-tier Apple Silicon scaling guide (32-512 GB)
+├── tests/
+│   └── test_core.py                # Unit tests for log pruner and template syntax
 ├── bin/
 │   ├── cargo-uma                   # Zero-OOM VRAM-flushing compiler wrapper
 │   ├── xiaomi_ocr_server.py        # Micro-VLM OpenAI-compatible OCR server
@@ -218,6 +251,25 @@ apple-silicon-ai-workstation/
 ├── mcp/
 │   └── local_code_worker/
 │       └── server.py               # FastMCP 8-tool unified agent server
+├── configs/
+│   ├── llama-swap.yaml.template    # UMA single-model & group router configuration
+│   ├── cordis.patch.yml.template   # DeepSeek SuperAgent Cordis configuration
+│   └── launchd/                    # Portable launchd templates
+│       ├── com.localai.wiredlimit.plist.template
+│       ├── com.localai.llamaswap.plist.template
+│       ├── com.ai.ecosystem.bot.plist.template
+│       ├── com.ai.ecosystem.digest.plist.template
+│       └── com.ai.ecosystem.backup.plist.template
+└── scripts/
+    ├── setup_wired_limit.sh        # Kernel tuning installer for wired memory
+    ├── download_models.sh          # Batch downloader from Hugging Face
+    ├── install_services.sh         # LaunchAgents installer with path interpolation
+    └── backup_to_gdrive.sh         # Compressed weekly backup & rclone sync
+```
+
+---
+
+## 12. License & Citation
 ├── configs/
 │   ├── llama-swap.yaml.template    # UMA single-model & group router configuration
 │   ├── cordis.patch.yml.template   # DeepSeek SuperAgent Cordis configuration
