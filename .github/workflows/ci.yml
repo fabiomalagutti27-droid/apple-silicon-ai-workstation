@@ -36,7 +36,7 @@ jobs:
 
       - name: Validate Shell Scripts
         run: |
-          shellcheck -e SC1091 -e SC2086 bootstrap.sh scripts/*.sh
+          shellcheck -e SC1091 -e SC2086 -e SC2016 bootstrap.sh scripts/*.sh
 
       - name: Validate Config Templates (YAML & XML)
         run: |

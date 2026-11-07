@@ -58,7 +58,9 @@ chmod +x "${HOME}/.local/bin/cargo-uma"
 cp "${HOME}/.local/bin/cargo-uma" "${HOME}/bin/cargo-uma" 2>/dev/null || true
 
 # 6. Assicura che ~/.local/bin sia nel PATH di zsh
+# shellcheck disable=SC2016
 if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' "${HOME}/.zshrc" 2>/dev/null; then
+    # shellcheck disable=SC2016
     echo 'export PATH="$HOME/.local/bin:$HOME/bin:$PATH"' >> "${HOME}/.zshrc"
     echo "✅ Aggiornato PATH in ~/.zshrc"
 fi
