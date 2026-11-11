@@ -18,7 +18,7 @@ RETENTION_DAYS=30
 mkdir -p "${BACKUP_DIR}"
 
 echo "======================================================================"
-echo "📦 AVVIO BACKUP SETTIMANALE ECOSISTEMA AI: ${TIMESTAMP}"
+echo "[BACKUP] Avvio backup settimanale ecosistema AI: ${TIMESTAMP}"
 echo "======================================================================"
 
 # 1. Creazione archivio compresso escludendo deliberatamente i pesi da centinaia di GB
@@ -45,11 +45,11 @@ tar -czf "${ARCHIVE_PATH}" \
     2>/dev/null || true
 
 ARCHIVE_SIZE=$(du -sh "${ARCHIVE_PATH}" | cut -f1)
-echo "✅ Archivio locale creato con successo: ${ARCHIVE_PATH} (${ARCHIVE_SIZE})"
+echo "[OK] Archivio locale creato con successo: ${ARCHIVE_PATH} (${ARCHIVE_SIZE})"
 
 # 2. Verifica disponibilità di rclone
 if ! command -v rclone >/dev/null 2>&1; then
-    echo "⚠️ rclone non trovato. Installa rclone via 'brew install rclone' e configuralo con 'rclone config'."
+    echo "[WARNING] rclone non trovato. Installa rclone via 'brew install rclone' e configuralo con 'rclone config'."
     echo "   L'archivio è stato comunque salvato localmente in: ${ARCHIVE_PATH}"
     exit 0
 fi
@@ -76,5 +76,5 @@ echo "--> Pulizia vecchi backup su Google Drive (> ${RETENTION_DAYS} giorni)..."
 rclone delete "${RCLONE_DEST}" --min-age "${RETENTION_DAYS}d" --include "m5pro_ai_ecosystem_*.tar.gz" 2>/dev/null || true
 
 echo "======================================================================"
-echo "🎉 BACKUP COMPLETATO CON SUCCESSO! (${ARCHIVE_SIZE} trasferiti su Google Drive)"
+echo "[SUCCESS] Backup completato con successo! (${ARCHIVE_SIZE} trasferiti su Google Drive)"
 echo "======================================================================"

@@ -72,3 +72,30 @@ Durante la compilazione parallela su 18 core CPU di crate complessi (Tokio, Arro
 | :--- | :---: | :---: | :---: |
 | **`cargo build` standard** | Bolt 74B attivo (38.5 GB) | > 75 GB (OOM) | **KERNEL PANIC (iBoot AMCC Freeze)** |
 | **`cargo-uma build` (Wrapper)** | 0 GB (Unload preventivo a 0.25s) | 51.4 GB UMA | **SUCCESSO (0 OOM, 18 Core a 100%)** |
+
+---
+
+### 6. Benchmark della Delega Ibrida Cloud-to-Local (FastMCP & Fusion Mode)
+
+Test di validazione empirica del protocollo Architect/Worker condotto collegando Antigravity CLI e Atomic Agent al worker locale `qwen35-fast` sul Mac mini M5 Pro via Tailscale WireGuard.
+
+#### Caso di Test Reale: RingBuffer<T, const N: usize> SPSC Lock-Free
+* **Orchestratore Cloud:** Definizione formale di firme, invarianti matematici e semantica Acquire/Release (~250 token cloud spesi).
+* **Worker Locale Metal:** Invocazione di `call_local_worker` via FastMCP su `100.73.59.49:8000` (`model="qwen35-fast"`).
+
+| Metrica di Esecuzione | Valore Rilevato | Note Operative |
+| :--- | :--- | :--- |
+| **Modello Esecutore** | `Qwen3.6-35B-A3B-UD-Q4_K_XL` | Quantizzazione 4-bit su Apple Silicon Metal 4 GPU |
+| **Token Generati a Costo 0 Cloud** | **2.227 token** | 258 righe di codice sorgente Rust + 4 test unitari completi |
+| **Tempo di Risposta Totale** | **21,32 secondi** | Latenza di rete Tailscale: 2 ms |
+| **Throughput di Generazione Reale** | **104,5 token/s** | Inferenza continua senza stream buffer stalls |
+| **Supervisione Critica Architect** | Rilevato `Ordering::Relaxed` -> `Acquire` | Correzione one-line da parte dell'Architetto prima del build |
+| **Esito Suite di Test (`rustc --test`)** | **4 passati su 4 (0 falliti, 0 warning)** | Invarianti FIFO, wrap-around, drop safety e stress multithread |
+
+#### Risparmio di Quota e Token Cloud
+```
+Generazione Tradizionale (Puro Cloud):   2.227 token di output consumati dalla quota oraria
+Architettura Ibrida (Architect/Worker):    250 token cloud spesi (solo specifiche) + 2.227 token locali a costo 0
+Risparmio Netto Quota Finestra Cloud:   88,8% di token cloud risparmiati per turno
+```
+

@@ -166,13 +166,13 @@ def run_review_gate(workspace: Path, force: bool = False) -> tuple[bool, str]:
     state = load_review_state(state_file)
 
     if not force and state.get("approved_sha") == head_sha:
-        return True, f"✅ Commit {head_sha[:8]} già approvato da Antigravity (`agy`)."
+        return True, f"[OK] Commit {head_sha[:8]} già approvato da Antigravity (`agy`)."
 
     round_count = int(state.get("round_count", 0))
     if not force and round_count >= MAX_REVIEW_ROUNDS:
         state["approved_sha"] = head_sha
         save_review_state(state_file, state)
-        return True, f"⚠️ Raggiunto il tetto massimo di {MAX_REVIEW_ROUNDS} round di review pre-PR; sblocco creazione PR."
+        return True, f"[WARNING] Raggiunto il tetto massimo di {MAX_REVIEW_ROUNDS} round di review pre-PR; sblocco creazione PR."
 
     # Estrai git diff rispetto a origin/main (o HEAD~1)
     rc, diff_text, _ = run_git(["diff", "origin/main...HEAD", "--", ".", ":!Cargo.lock"], cwd=workspace)
@@ -188,7 +188,7 @@ def run_review_gate(workspace: Path, force: bool = False) -> tuple[bool, str]:
 
     if static_issues:
         critic_approved = False
-        static_block = "\n".join(f"- 🚨 **Static AST/Pattern Alert:** {item}" for item in static_issues)
+        static_block = "\n".join(f"- [ALERT] **Static AST/Pattern Alert:** {item}" for item in static_issues)
         critic_report = f"VERDICT: CHANGES_REQUESTED\n\n{static_block}\n\n{critic_report}"
 
     new_round = round_count + 1
@@ -221,7 +221,7 @@ def run_review_gate(workspace: Path, force: bool = False) -> tuple[bool, str]:
         except Exception:
             pass
         return True, (
-            f"✅ [ANTIGRAVITY PRE-PR REVIEW GATE — ROUND {new_round}/{MAX_REVIEW_ROUNDS}: APPROVED]\n"
+            f"[APPROVED] [ANTIGRAVITY PRE-PR REVIEW GATE — ROUND {new_round}/{MAX_REVIEW_ROUNDS}: APPROVED]\n"
             f"Commit `{head_sha[:8]}` validato con successo da Antigravity (`agy`).\n\n"
             f"{critic_report}"
         )
@@ -236,8 +236,8 @@ def run_review_gate(workspace: Path, force: bool = False) -> tuple[bool, str]:
                     f"• **Commit:** `{head_sha[:8]}`\n"
                     f"• **Round:** `{new_round}/{MAX_REVIEW_ROUNDS}`\n"
                     f"• **Esito:** `CHANGES_REQUESTED`\n\n"
-                    f"🚨 **Critiche Antigravity (`agy`):**\n`{report_snippet}`\n\n"
-                    f"👉 Il worker locale (`qwen35-fast`) è stato istruito per auto-correggersi."
+                    f"[CRITIQUE] **Critiche Antigravity (`agy`):**\n`{report_snippet}`\n\n"
+                    f"Il worker locale (`qwen35-fast`) è stato istruito per auto-correggersi."
                 ),
                 level="WARNING"
             )
@@ -245,12 +245,12 @@ def run_review_gate(workspace: Path, force: bool = False) -> tuple[bool, str]:
             pass
         return False, (
             f"======================================================================\n"
-            f"🚫 [ANTIGRAVITY (agy) PRE-PR CODE REVIEW GATE — ROUND {new_round}/{MAX_REVIEW_ROUNDS}: CHANGES REQUESTED]\n"
+            f"[CHANGES REQUESTED] [ANTIGRAVITY (agy) PRE-PR CODE REVIEW GATE — ROUND {new_round}/{MAX_REVIEW_ROUNDS}: CHANGES REQUESTED]\n"
             f"======================================================================\n"
             f"Prima di pubblicare la Pull Request, Antigravity (`agy`) ha analizzato il tuo\n"
             f"`git diff` sul commit `{head_sha[:8]}` e ha rilevato i seguenti problemi da correggere:\n\n"
             f"{critic_report}\n\n"
-            f"👉 AZIONE OBBLIGATORIA PER IL WORKER (`qwen35-fast`):\n"
+            f"AZIONE OBBLIGATORIA PER IL WORKER (`qwen35-fast`):\n"
             f"1. Correggi subito i punti indicati qui sopra nei file sorgente.\n"
             f"2. Verifica la compilazione e i test con `cargo-uma test`.\n"
             f"3. Esegui `git add` e `git commit` con le correzioni.\n"

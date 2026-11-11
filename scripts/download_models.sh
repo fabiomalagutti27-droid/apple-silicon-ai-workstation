@@ -20,7 +20,7 @@ download_model() {
     local repo_id="$1"
     local target_dir="$2"
     echo "----------------------------------------------------------------------"
-    echo "📥 Download: ${repo_id} -> ${MODELS_DIR}/${target_dir}"
+    echo "[DOWNLOAD] ${repo_id} -> ${MODELS_DIR}/${target_dir}"
     echo "----------------------------------------------------------------------"
     huggingface-cli download "${repo_id}" --local-dir "${MODELS_DIR}/${target_dir}" --local-dir-use-symlinks False
 }
@@ -41,5 +41,5 @@ download_model "mlx-community/gemma-4-26b-a4b-it-8bit" "gemma-4-26b-a4b-mlx-8bit
 download_model "xiaomi-research/Xiaomi-OCR-0" "xiaomi-ocr-0"
 
 echo "======================================================================"
-echo "🎉 TUTTI I MODELLI SONO STATI SCARICATI CORRETTAMENTE IN ${MODELS_DIR}"
+echo "[SUCCESS] Tutti i modelli sono stati scaricati correttamente in ${MODELS_DIR}"
 echo "======================================================================"

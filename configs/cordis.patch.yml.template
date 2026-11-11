@@ -54,7 +54,7 @@
             maxTokens: 8192
             input: [text]
           - id: gemini
-            name: ⚡️ Gemini 3.8 Flash (High) - Antigravity Proxy
+            name: Gemini 3.8 Flash (High) - Antigravity Proxy
             contextWindow: 1048576
             maxTokens: 65536
             input: [text]

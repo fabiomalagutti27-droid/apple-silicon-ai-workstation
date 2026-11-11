@@ -6,17 +6,17 @@
 set -euo pipefail
 
 echo "╔═══════════════════════════════════════════════════════════════════════╗"
-echo "║   🍎 APPLE SILICON AI WORKSTATION - BOOTSTRAP AUTOMATIZZATO           ║"
+echo "║   APPLE SILICON AI WORKSTATION - BOOTSTRAP AUTOMATIZZATO              ║"
 echo "║   Setup Idempotente per macOS (M1/M2/M3/M4/M5 Pro/Max/Ultra)          ║"
 echo "╚═══════════════════════════════════════════════════════════════════════╝"
 
 # 1. Controllo Architettura Apple Silicon
 ARCH=$(uname -m)
 if [ "$ARCH" != "arm64" ]; then
-    echo "❌ Errore: Questa architettura richiede un processore Apple Silicon (arm64). Rilevato: $ARCH"
+    echo "[ERROR] Questa architettura richiede un processore Apple Silicon (arm64). Rilevato: $ARCH"
     exit 1
 fi
-echo "✅ Architettura verificata: Apple Silicon (${ARCH})"
+echo "[OK] Architettura verificata: Apple Silicon (${ARCH})"
 
 # 2. Controllo / Installazione Homebrew
 if ! command -v brew >/dev/null 2>&1; then
@@ -24,7 +24,7 @@ if ! command -v brew >/dev/null 2>&1; then
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
-echo "✅ Homebrew presente: $(brew --version | head -n1)"
+echo "[OK] Homebrew presente: $(brew --version | head -n1)"
 
 # 3. Installazione Pacchetti via Brewfile
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -62,7 +62,7 @@ cp "${HOME}/.local/bin/cargo-uma" "${HOME}/bin/cargo-uma" 2>/dev/null || true
 if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' "${HOME}/.zshrc" 2>/dev/null; then
     # shellcheck disable=SC2016
     echo 'export PATH="$HOME/.local/bin:$HOME/bin:$PATH"' >> "${HOME}/.zshrc"
-    echo "✅ Aggiornato PATH in ~/.zshrc"
+    echo "[OK] Aggiornato PATH in ~/.zshrc"
 fi
 
 # 7. Copia Template di Configurazione se non esistenti
@@ -84,7 +84,7 @@ if [ ! -d "${VENV_PATH}" ]; then
 fi
 
 echo "======================================================================"
-echo "🎉 BOOTSTRAP COMPLETATO CON SUCCESSO!"
+echo "[SUCCESS] Bootstrap completato con successo!"
 echo "Prossimi passaggi consigliati:"
 echo " 1. Applica il limite UMA:  sudo bash scripts/setup_wired_limit.sh"
 echo " 2. Scarica i modelli:      bash scripts/download_models.sh"

@@ -1,4 +1,4 @@
-# 🍎 Apple Silicon AI Workstation & Autonomous Agent Infrastructure
+# Apple Silicon AI Workstation & Autonomous Agent Infrastructure
 ### Production-Grade Blueprint for High-Throughput MoE Local Inference, Zero-OOM Compilation, and Multi-Agent Orchestration
 
 [![Hardware](https://img.shields.io/badge/Hardware-Apple%20M5%20Pro%20(64GB%20UMA)-black?logo=apple&style=for-the-badge)](https://apple.com)
@@ -22,9 +22,10 @@ The architecture is designed to solve real-world bottlenecks encountered when ru
 * **Deterministic Zero-OOM Compilation:** A compiler wrapper (`cargo-uma`) that unloads active LLMs from VRAM in 250 ms before rustc/LLVM compiles heavy parallel workspaces, preventing system lockups and kernel panics.
 * **Stream-Safe Resource Partitioning:** Independent memory groups in `llama-swap` preventing VRAM contention between high-frequency triage routers (cloud proxy at 0 MB VRAM) and streaming execution workers (MoE 8-bit Q8 on Metal).
 * **Observation Masking & Context Compression:** Integrated regex densito-filtering (`log_pruner.py`, -92% token waste) and neural compression (LLMLingua-2, 50–65% ratio) preserving agent context windows.
+* **Hybrid Architect/Worker Delegation:** Seamless integration between Frontier Cloud orchestrators (Gemini 4 Carbon / Argon via Antigravity and Atomic Agent) and local Metal workers (`qwen35-fast` at ~104 tok/s and `qwen35-core` at ~60 tok/s), achieving up to 90% cloud token cost reduction while preserving 100% compilation safety.
 
 > [!NOTE]
-> ### 🖥️ Target Reference Machine (Author's Rig Specification)
+> ### Target Reference Machine (Author's Rig Specification)
 > All throughput benchmarks, memory allocations, and configuration files in this repository are verified on the author's primary compute node:
 > * **Hardware Model:** Apple Mac mini (`Mac17,16`, Darwin 27.2.0 arm64, Apple M5 Pro)
 > * **Processor:** 18 CPU Cores (High-Performance & High-Efficiency architecture)
@@ -46,18 +47,21 @@ flowchart TB
     subgraph Client["Developer Station / Thin Client (MacBook Air)"]
         UI_Goose["Goose Desktop GUI"]
         UI_Obsidian["Obsidian Vault & Copilot Plugin"]
-        CLI_AGY["Antigravity CLI (agy)"]
+        CLI_AGY["Antigravity CLI (agy - Acc 1/2 Flat Pro)"]
+        CLI_ATAG["Atomic Agent (atag-carbon Fusion - Acc 3 API)"]
         CLI_OpenCode["OpenCode Web & CLI"]
+        Auth_Matrix["agy-account Switcher (Zero-Conflict OAuth/API)"]
         SSH_Tun["dsh-dashboard (SSH Auto-Tunnel :3082)"]
     end
 
-    subgraph Mesh["Private WireGuard Mesh (Tailscale P2P <1.2ms)"]
+    subgraph Mesh["Private WireGuard Mesh (Tailscale P2P <2ms)"]
         Tunnel["Encrypted Direct P2P Channel"]
         SyncMesh["Syncthing Mesh (Ports 22000 / 8384)"]
     end
 
     subgraph Host["Dedicated Compute Node (Mac mini M5 Pro - 64 GB UMA)"]
         Gateway["llama-swap Reverse Proxy (:8000)"]
+        LocalWorkers["Metal MoE Workers: qwen35-fast (~104 tok/s) · qwen35-core (~60 tok/s)"]
         RapidMLX["rapid-mlx Metal Inference Engines (:8010-:8020)"]
         Satellites["Micro-Worker Satellites (OCR, Log-Pruner, LLMLingua-2, BGE)"]
         DSH_Daemon["DeepSeek SuperAgent Harness (:3082)"]
@@ -113,7 +117,7 @@ All weights are stored locally in `~/.models/` on high-throughput NVMe storage:
 | **`xiaomi-ocr`** | Xiaomi-OCR-0 (0.8B Micro-VLM) | PyTorch MPS FP16 | ~1.2 GB | **162.0 tok/s** | 4,096 | Optical Markdown extraction and KaTeX formulas from PDFs/images |
 | **`gemini`** | Gemini 3.8 Flash High | Frontier Cloud Proxy | 0 MB | Sub-second | 1,048,576 | High-context escalation, Actor-Critic Pre-PR code review |
 
-> 📐 **Hardware Sizing & Multi-Tier Scaling:** Running this setup on 32 GB, 48 GB, 128 GB, or 192 GB? Consult the exhaustive [Hardware Sizing Guide (docs/HARDWARE_SIZING.md)](docs/HARDWARE_SIZING.md) for custom memory allocations and model rosters.
+> **Hardware Sizing & Multi-Tier Scaling:** Running this setup on 32 GB, 48 GB, 128 GB, or 192 GB? Consult the exhaustive [Hardware Sizing Guide (docs/HARDWARE_SIZING.md)](docs/HARDWARE_SIZING.md) for custom memory allocations and model rosters.
 
 ---
 
@@ -136,7 +140,7 @@ Following recent empirical software engineering literature (*Mehboob et al., arX
 * **One-Shot Pass Rate (SWE-bench):** Q8 models achieve **73.4%** one-shot success with near-zero borrow-checker syntax errors, compared to **41.2%** for 4-bit models (which suffer from retry loops).
 * **Long-Context Resilience (>32k tokens):** 4-bit models undergo non-linear attention degradation (*needle-in-a-haystack* score drops to 58.4%), whereas 8-bit Q8 maintains **99.8%** recall up to 131,072 tokens.
 
-> 📊 **Submit Community Benchmarks:** Own an M1/M2/M3/M4/M5 Mac? [Submit your real tok/s measurements](../../issues/new?template=benchmark_submission.yml) to be reviewed and added to our verified benchmark matrix.
+> **Submit Community Benchmarks:** Own an M1/M2/M3/M4/M5 Mac? [Submit your real tok/s measurements](../../issues/new?template=benchmark_submission.yml) to be reviewed and added to our verified benchmark matrix.
 
 ---
 
@@ -233,6 +237,49 @@ The unified FastMCP server ([`mcp/local_code_worker/server.py`](mcp/local_code_w
 7. `rerank_vault_documents(query, chunks)`: MPS cross-encoder reranker (BGE-Reranker-v2-m3).
 8. `review_diff_with_antigravity(workspace_path)`: Actor-Critic Pre-PR gate auditing diffs for indexing bugs or memory flaws before opening GitHub pull requests.
 
+### 7.1 Hybrid Cloud Architect / Local Worker Delegation (Antigravity & Atomic Agent)
+
+In addition to headless SuperAgent ticket processing, the workstation exposes a high-efficiency interactive hybrid development pipeline for developer workstations (MacBook Air client):
+
+```mermaid
+flowchart TD
+    subgraph Client["Developer Station (MacBook Air)"]
+        AGY["Antigravity CLI (agy) - 90% Daily Flow"]
+        ATAG["Atomic Agent (atag-carbon) - 10% Critical Tasks"]
+        MGR["agy-account Switcher (Manual OAuth/API Isolation)"]
+    end
+
+    subgraph Orchestrators["Cloud Frontier Orchestrators"]
+        ARGON["Gemini 4 Argon / 3.8 Flash (Flat Google AI Pro Quota)"]
+        CARBON["Gemini 4 Carbon (API Prepay - Hard Cap $0.35/turn)"]
+    end
+
+    subgraph Enforcers["Delegation Gates"]
+        SOFT["Soft-Gate (AGENTS.md >= 40 LOC via FastMCP)"]
+        HARD["Hard-Gate (atomic-agent fusion runtime: 0 cloud writes)"]
+    end
+
+    subgraph Workers["Apple Silicon Metal Workers (100.73.59.49:8000)"]
+        FAST["qwen35-fast (4-bit, ~104.5 tok/s) - 80% Unit Tests, Scripts, Boilerplate"]
+        CORE["qwen35-core (8-bit, ~60 tok/s) - 20% Critical Tokio/Rust Lifetimes"]
+    end
+
+    AGY --> ARGON --> SOFT --> FAST & CORE
+    ATAG --> CARBON --> HARD --> FAST & CORE
+    MGR -.->|Instant Token Swap| AGY
+```
+
+#### Dual-Gate Architectural Specification:
+1. **Antigravity Soft-Gate (`AGENTS.md`):**
+   * Configures a threshold rule in `AGENTS.md`: For code generation or refactoring exceeding 40 lines of code, the Cloud model acts strictly as an Architect (defining type signatures, invariants, and specifications in ~200-400 tokens) and delegates code generation to `call_local_worker` (`qwen35-fast`).
+   * *Empirical Verification:* SPSC lock-free `RingBuffer` test generated **2,227 tokens in 21.32s at 104.5 tok/s** on Metal GPU, with zero cloud tokens consumed for code generation and 4/4 passing unit tests.
+2. **Atomic Agent Hard-Gate (`fusion-orchestrator-mode.ts`):**
+   * Enforced at the TypeScript runtime level: Prevents cloud models from invoking mutating tools (`write`, `edit`). Gemini 4 Carbon is strictly constrained to `plan` and `review`, while local Metal workers (`macmini-qwen-core` for `build`, `macmini-qwen-fast` for `explore`) write to an isolated Git worktree.
+   * *Cost Guardrails:* Per-turn spending limit (`turnBudgetUsd: 0.35`) and serialized single-worker queue (`workers: 1`) preventing Metal memory thrashing.
+3. **Tri-Tier Account Management (`agy-account`):**
+   * **Account 1 & 2 (Google AI Pro Flat):** OAuth tokens saved in `~/.gemini/accounts/account1` and `account2`. Switched manually in 1.5 seconds (`agy-account 2`) without browser re-authentication.
+   * **Account 3 (Cloud Prepay API Key):** Converted to environment-isolated storage (`~/.atomic-agent/.env`). Antigravity CLI wrapper explicitly unsets API keys (`env -u GEMINI_API_KEY -u GOOGLE_API_KEY`), ensuring zero billing leak risk.
+
 ---
 
 ## 8. Quickstart: One-Touch Makefile & Manual Setup
@@ -276,7 +323,7 @@ Running continuous 24/7 agentic loops on commercial cloud infrastructure (RunPod
 | **DIY Dual RTX 3090 Rig** | ~$2,300 | ~80W (Idle) | ~$35/mo (Power) | ~$2,720 | ~90 days |
 | **Apple Mac mini M5 Pro (64 GB UMA, 1 TB SSD)** | **~€ 2,849 – € 3,079** | **< 7W (Idle)** | **~€ 3.20/mo (Power)** | **~€ 2,887 – € 3,117** | **~75–90 Days vs. Cloud** |
 
-> 💡 *Note on Hardware Pricing:* The Mac mini price reflects official Apple Store Italy CTO pricing (Apple M5 Pro with 64 GB unified memory upgrade and 1 TB SSD, 22% VAT included).
+> *Note on Hardware Pricing:* The Mac mini price reflects official Apple Store Italy CTO pricing (Apple M5 Pro with 64 GB unified memory upgrade and 1 TB SSD, 22% VAT included).
 > 
 > *Operational Takeaway:* The Mac mini M5 Pro pays for itself within ~75 to 90 days of persistent autonomous development while operating whisper-quiet (<18 dBA) on a standard desk.
 

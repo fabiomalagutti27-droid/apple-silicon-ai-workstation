@@ -29,7 +29,7 @@ dtype = torch.float16 if device == "mps" else torch.float32
 
 model = AutoModelForImageTextToText.from_pretrained(args.model_path, dtype=dtype).to(device).eval()
 processor = AutoProcessor.from_pretrained(args.model_path)
-print(f"✔ Xiaomi-OCR-0 ready on {device} (VRAM: ~1.2 GB)")
+print(f"[OK] Xiaomi-OCR-0 ready on {device} (VRAM: ~1.2 GB)")
 
 async def health_handler(request):
     return web.json_response({"status": "ok", "model": "xiaomi-ocr-0"})

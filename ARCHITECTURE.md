@@ -2,23 +2,24 @@
 ## Architettura MoE-First, Satellite Micro-Models, Mesh di Sincronizzazione & Hybrid Escalation
 
 > [!IMPORTANT]
-> ### 🛡️ STATO INFRASTRUTTURA: VERIFICATO & AGGIORNATO AD OGGI
+> ### STATO INFRASTRUTTURA: VERIFICATO & AGGIORNATO AD OGGI
 > ```
 > ╔═══════════════════════════════════════════════════════════════════════════════════════╗
-> ║  ● SYSTEM AUDIT PASS  │  LIVE VERIFIED ON MAC MINI M5 PRO  │  DATA: 7 NOVEMBRE 2026   ║
+> ║  ● SYSTEM AUDIT PASS  │  LIVE VERIFIED ON MAC MINI M5 PRO  │  DATA: 11 NOVEMBRE 2026  ║
 > ║  UMA: 64 GB (56 GB Wired GPU Metal 4)  │  CPU: 18C  │  GPU: 20C  │  NVMe: ~6.5 GB/s   ║
 > ║  ALL SERVICES ONLINE: llama-swap (:8000) · SuperAgent (:3082) · OpenCode (:49374)     ║
-> ║  STATUS VERIFICA: 24/24 SOTTOSISTEMI CONVALIDATI · ZERO REGRESSIONI · ZERO-OOM ATTIVO ║
+> ║  HYBRID DELEGATOR: FastMCP call_local_worker · Atomic Agent Fusion (Carbon+Qwen)      ║
+> ║  STATUS VERIFICA: 28/28 SOTTOSISTEMI CONVALIDATI · ZERO REGRESSIONI · ZERO-OOM ATTIVO ║
 > ╚═══════════════════════════════════════════════════════════════════════════════════════╝
 > ```
-> **Data Ultima Certificazione Live:** Sabato 7 Novembre 2026  
+> **Data Ultima Certificazione Live:** Mercoledì 11 Novembre 2026  
 > **Host Verificato:** `Mac-mini.station` (`100.x.y.z` alias `macmini`, macOS Darwin 27.2.0 arm64)  
 > **Esito Audit Ecosistema:** **100% OPERATIVO E ALLINEATO ALLA REALTÀ OPERATIVA**
 
 **Target di Calcolo Primario:** Apple Mac mini M5 Pro (64 GB UMA, 18 CPU Core, 20 GPU Core, SSD NVMe ~6.5 GB/s)  
 **Developer Station / Client GUI:** Apple MacBook Air M1 (Thin Client & Controller Locale)  
 **Topologia di Rete:** Tailscale WireGuard Mesh Privata (`100.x.y.z` alias `macmini`, P2P crittografato)  
-**Data di Riferimento & Audit:** 7 Novembre 2026  
+**Data di Riferimento & Audit:** 11 Novembre 2026  
 **Autore:** Antigravity AI Systems Engineering Team  
 
 ---
@@ -32,20 +33,23 @@ flowchart TB
     subgraph MacBookAir["MacBook Air M1 (Thin Client & Local Controller)"]
         UI_Goose["Goose Desktop App (GUI)"]
         UI_Obsidian["Obsidian Vault & Copilot Plugin"]
-        CLI_AGY["Antigravity CLI (agy)"]
+        CLI_AGY["Antigravity CLI (agy - Acc 1/2 Flat Pro)"]
+        CLI_ATAG["Atomic Agent (atag-carbon Fusion - Acc 3 API)"]
         CLI_OpenCode["OpenCode CLI"]
+        Auth_Matrix["agy-account Switcher (Zero-Conflict OAuth/API)"]
         AgyMenu["AgyMenuBar (macOS Status Bar App)"]
         Herdr_Client["herdr / herdr-agent-quota Statusline"]
         DSH_DashClient["dsh-dashboard (SSH Auto-Tunnel :3082)"]
     end
 
     subgraph Mesh["Rete Mesh Privata WireGuard (Tailscale)"]
-        Tunnel["Canale Diretto P2P Crittografato: 100.x.y.z (Latenza < 1.2ms)"]
+        Tunnel["Canale Diretto P2P Crittografato: 100.x.y.z (Latenza ~2ms)"]
         SyncMesh["Syncthing P2P Mesh (Porta 22000 / 8384)"]
     end
 
     subgraph MacMini["Mac mini M5 Pro (Dedicated Compute Node - 64 GB UMA)"]
         Gateway["llama-swap Reverse Proxy (:8000)"]
+        LocalWorkers["Worker Locali Metal: qwen35-fast (104.5 t/s) · qwen35-core (60 t/s)"]
         RapidMLX["rapid-mlx Metal Inference Engines (:8010-:8020)"]
         Satellites["Micro-Worker Satelliti (OCR, Log-Pruner, LLMLingua-2, ModernBERT, BGE)"]
         DSH_Daemon["DeepSeek SuperAgent Harness (:3082)"]
@@ -252,6 +256,62 @@ flowchart LR
 * **`claude-mem` Worker Daemon:**
   Processo Bun in background (`worker-service.cjs --daemon`) che mantiene indici semantici persistenti e osservazioni cross-session.
 
+### 5.3 Architettura Ibrida Multi-Account & Delega Architect/Worker
+
+L'integrazione con Frontier Cloud introduce un'architettura ibrida asimmetrica a tre livelli:
+
+```mermaid
+flowchart TD
+    subgraph UI["Interfacce di Controllo (MacBook Air)"]
+        AGY["agy (Quota Flat Pro - 90% del tempo)"]
+        ATAG["atag-carbon (Fusion Mode - 10% del tempo)"]
+        SWITCH["agy-account 1 | 2 (Switch Manuale Token)"]
+    end
+
+    subgraph CLOUD["Cloud Orchestrator (Google Frontier)"]
+        ARGON["Gemini 4 Argon / 3.8 Flash (Quota Illimitata Flat)"]
+        CARBON["Gemini 4 Carbon (API Prepay Progettov2 - Cap $0.35/turno)"]
+    end
+
+    subgraph DELEGATION["Gate di Delega"]
+        SOFT["Soft-Gate (AGENTS.md >= 40 LOC via FastMCP)"]
+        HARD["Hard-Gate (atomic-agent fusion-orchestrator: 0 cloud writes)"]
+    end
+
+    subgraph LOCAL["Worker Locale Mac mini M5 Pro (100.x.y.z)"]
+        FAST["qwen35-fast (4-bit, ~104.5 tok/s) - 80% Coding/Test"]
+        CORE["qwen35-core (8-bit, ~60 tok/s) - 20% Tokio/Rust"]
+    end
+
+    AGY --> ARGON --> SOFT --> FAST & CORE
+    ATAG --> CARBON --> HARD --> FAST & CORE
+    SWITCH -.->|Swap Atomico OAuth| AGY
+```
+
+#### 5.3.1 Matrice dei 3 Account & Separazione dei Canali (Zero-Conflict)
+Per eliminare alla radice il rischio di addebiti involontari sui crediti API, le credenziali sono separate fisicamente:
+1. **Account 1 (Pro Flat Principale) & Account 2 (Pro Flat Riserva):**
+   - Memorizzati rispettivamente in `~/.gemini/accounts/account1/` e `~/.gemini/accounts/account2/`.
+   - Gestiti dallo switcher manuale `agy-account`. Lo switch è **rigorosamente manuale** (nessun cambio automatico in background) e non richiede ri-autenticazione dal browser.
+   - Il wrapper `agy` in `~/.zshrc` esegue `env -u GEMINI_API_KEY -u GOOGLE_API_KEY`, rendendo la CLI `agy` cieca rispetto alle API a pagamento (costo fisso: **0,00 EUR**).
+2. **Account 3 (Cloud Prepay API Key per Gemini 4 Carbon):**
+   - Confinato in `~/.atomic-agent/.env` (permessi `0600`).
+   - Attivabile solo tramite il comando dedicato `atag-carbon` (oppure `agy-api`).
+
+#### 5.3.2 Il Protocollo Architect/Worker in Antigravity (Soft-Gate >= 40 Righe)
+Configurato nel file globale `AGENTS.md`:
+* **Micro-Edit (< 40 righe):** eseguiti direttamente dal modello Cloud (`edit_file`).
+* **Implementazioni / Nuovi Test / Refactoring (>= 40 righe):**
+  - **Passo 1 (Cloud Architect):** definisce unicamente le firme, gli invarianti e la specifica formale (consumando solo ~200-400 token cloud).
+  - **Passo 2 (Delega Worker Locale a 0 EUR):** invoca autonomamente il tool FastMCP `call_local_worker` verso il Mac mini via WireGuard (`model="qwen35-fast"` a ~104.5 tok/s o `"qwen35-core"` a ~60 tok/s).
+  - **Passo 3 (Review & Validazione):** l'Architetto Cloud valida il codice generato localmente e invoca `cargo-uma` per compilare in sicurezza zero-OOM.
+
+#### 5.3.3 Atomic Agent (`atag-carbon`) Fusion Mode (Hard-Gate a Livello di Codice)
+Implementato dal runtime TypeScript `atomic-agent` (`~/.atomic-agent/config.json`, schema v79):
+* **Bypass della Whitelist Client-Side:** Interroga direttamente `GET /v1beta/openai/models`, consentendo l'uso immediato di `gemini-4-carbon` con API Key.
+* **Hard-Gate Runtime:** Nel modulo `fusion-orchestrator-mode.ts`, qualsiasi chiamata di scrittura su file o bash mutativo da parte di Carbon viene intercettata e bloccata a livello di motore. Carbon può solo formulare il piano (`plan`) e revisionare (`review`), mentre la scrittura fisica è delegata a `macmini-qwen-core` (`build`) e `macmini-qwen-fast` (`explore`/`utility`) su worktree git isolati.
+* **Circuit Breaker Finanziario:** `turnBudgetUsd: 0.35` (hard-cap per singolo turno) e `workers: 1` (serializzazione su `llama-swap` per prevenire thrashing della memoria NVMe Metal).
+
 ---
 
 ## 6. Sottosistemi di Telemetria, Automazione & Sincronizzazione
@@ -442,7 +502,7 @@ Schedulata dal LaunchAgent [`com.ai.ecosystem.digest.plist`](file:///Users/fabio
 4. **Manutenzione Proattiva delle Dipendenze:**
    * `dependency_checker.py` scansiona i crate di `spatiotemporal` verificando aggiornamenti su crates.io.
    * Se individua dipendenze aggiornabili, inserisce nel messaggio Telegram un pulsante inline interattivo:  
-     `[🛠 Aggiorna Dipendenze (SuperAgent)]`  
+     `[Aggiorna Dipendenze (SuperAgent)]`  
      che con un solo tocco da iPhone dispatcia il task di aggiornamento ad issue GitHub per la generazione automatica della Pull Request.
 5. **Distribuzione Multicanale:**
    * **Telegraph Instant View (`telegraph_publisher.py`):** Pubblica l'articolo long-form con tabelle native per una lettura perfetta da mobile.
@@ -463,7 +523,7 @@ Schedulata dal LaunchAgent [`com.ai.ecosystem.digest.plist`](file:///Users/fabio
   * Esegue la trascrizione su Metal GPU tramite `mlx_whisper` con modello **`whisper-large-v3-turbo`** in **~0.8 secondi**.
 * **Suite di 24 Strumenti di Sistema ReAct ([`core/system_tools.py`](file:///Users/fabiomalagutti/ai-ecosystem/core/system_tools.py)):**
   * Dà al bot capacità agentica diretta per leggere/scrivere file, eseguire comandi shell, interrogare stato disco/RAM UMA, effettuare ricerche web (`web_search`, `fetch_web_page`), interagire con l'ecosistema Apple TCC (Reminders, Notes, Calendar, Mail, iMessage, Car Location) e Google OAuth (Gmail, Google Calendar).
-  * **Context Guard & Anti-Poisoning Guard ([`core/llm_client.py`](file:///Users/fabiomalagutti/ai-ecosystem/core/llm_client.py)):** Se l'output cumulativo dei tool supera 50.000 caratteri, comprime dinamicamente i tool-messages storici per impedire il superamento della context window di 32k/128k token, filtrando stringhe di avviso storiche (`⚠️`) per proteggere il modello da prompt poisoning.
+  * **Context Guard & Anti-Poisoning Guard ([`core/llm_client.py`](file:///Users/fabiomalagutti/ai-ecosystem/core/llm_client.py)):** Se l'output cumulativo dei tool supera 50.000 caratteri, comprime dinamicamente i tool-messages storici per impedire il superamento della context window di 32k/128k token, filtrando stringhe di avviso storiche (`[WARNING]`) per proteggere il modello da prompt poisoning.
 * **Intent Classifier Vocale & Ricerca Scientifica Avanzata:**
   * `extract_voice_intent(...)` categorizza la richiesta vocale/testuale in `SUPERAGENT_TASK`, `ANTIGRAVITY_TASK`, `GENERAL_CODE` o `GENERAL_CHAT`.
   * Se l'utente menziona *"Google Scholar"*, *"DeepScholar"*, *"paper scientifici"*, *"arXiv"* o *"ricerca approfondita"*, il sistema esegue l'**Escalation Automatica ad Antigravity CLI (`agy` / Gemini 3.8 Flash High)**, che dispone delle skill accademiche e di web search avanzato per restituire sintesi bibliografiche rigorose e citate.
@@ -473,7 +533,7 @@ Schedulata dal LaunchAgent [`com.ai.ecosystem.digest.plist`](file:///Users/fabio
   * **Browser-Impersonated Web Scraper:** Scarica ed estrae il testo pulito degli articoli con intestazioni Chrome realistiche per bypassare blocchi Cloudflare/403.
   * Inietta il blocco strutturato `[GROUNDING AUTOMATICO URL]` direttamente nel prompt dell'LLM locale, eliminando le allucinazioni del modello e le risposte passive come "non posso aprire i link".
 * **Temporal Real-Time Grounding ([`core/llm_client.py`](file:///Users/fabiomalagutti/ai-ecosystem/core/llm_client.py)):**
-  * Inietta dinamicamente a runtime nel System Prompt l'intestazione formale `📅 DATA E ORA ATTUALE DI SISTEMA` con data, ora e anno di sistema calcolati in tempo reale ad ogni invocazione.
+  * Inietta dinamicamente a runtime nel System Prompt l'intestazione formale `DATA E ORA ATTUALE DI SISTEMA` con data, ora e anno di sistema calcolati in tempo reale ad ogni invocazione.
   * Elimina deterministicamente il bias di cutoff temporale, istruendo esplicitamente il modello a considerare l'anno corrente come presente reale.
 * **Auto-Telegraph Switch (`delivery.py`):**
   * Se la risposta del modello supera i 1.200 caratteri o contiene tabelle Markdown, viene automaticamente formattata e pubblicata su Telegraph DOM, inviando su Telegram una preview concisa con pulsante Instant View per preservare la pulizia visiva della chat.
@@ -481,7 +541,7 @@ Schedulata dal LaunchAgent [`com.ai.ecosystem.digest.plist`](file:///Users/fabio
   * Loop asincrono permanente in background (intervallo **25 secondi**) all'interno dell'event loop del bot.
   * Interroga i task attivi in [`bridge_registry.sqlite`](file:///Users/fabiomalagutti/.ai-cache/bridge_registry.sqlite) e monitora GitHub (PR aperte e commenti alle issue) tramite `gh-agent`.
   * Non appena SuperAgent completa l'elaborazione o apre la PR, invia istantaneamente una notifica push Telegram all'iPhone con pulsante inline:  
-    `[⚡️ Apri Pull Request su GitHub]`
+    `[Apri Pull Request su GitHub]`
 * **Integrazioni Personali di Sistema:**
   * **Apple Ecosystem (`integrations/apple/`):** Accesso certificato TCC (`tcc_ceremony.py`) ad Apple Calendar, Reminders, Notes, Mail e Messages.
   * **Google Ecosystem (`integrations/google/`):** Accesso OAuth a Google Calendar (`gcalendar_tool.py`) e Gmail (`gmail_tool.py`).
@@ -587,13 +647,26 @@ MACBOOK AIR M1 (Client & Controller)
 │   ├── .config/
 │   │   ├── goose/config.yaml                  # Goose con local_code_worker e provider macmini
 │   │   └── opencode/opencode.json             # Provider macmini via Tailscale
+│   ├── .atomic-agent/                         # Atomic Agent Fusion Runtime (Account 3 API)
+│   │   ├── config.json                        # Schema v79 (gemini-4-carbon + macmini-qwen Fusion)
+│   │   └── .env                               # Chiave GEMINI_API_KEY confinata (chmod 0600)
+│   ├── .gemini/
+│   │   ├── accounts/                          # Cassaforte token multi-account
+│   │   │   ├── account1/antigravity-oauth-token # Account 1 Flat Pro
+│   │   │   └── account2/antigravity-oauth-token # Account 2 Flat Pro
+│   │   ├── antigravity-cli/                   # Antigravity CLI e Workspace di sviluppo
+│   │   └── config/mcp_config.json             # Registrazione FastMCP local-code-worker
 │   ├── Library/LaunchAgents/
 │   │   ├── com.user.goose-env.plist           # Iniezione variabili d'ambiente Goose
 │   │   ├── com.ai.agy.menubar.plist           # AgyMenuBar status app
 │   │   ├── sh.brew.herdr.plist                # Daemon token/quota tracking
 │   │   └── sh.brew.syncthing.plist            # Daemon sincronizzazione dati
-│   ├── .local/bin/dsh-dashboard               # Script apertura automatica dashboard via SSH tunnel
-│   └── .gemini/antigravity-cli/               # Antigravity CLI e Workspace di sviluppo
+│   ├── .local/bin/
+│   │   ├── agy, agy-api, agy-resume           # Antigravity CLI e Session Manager a colori
+│   │   ├── agy-account                        # Selettore manuale identità Account 1/2
+│   │   ├── atag-carbon, atag-local            # Launcher Atomic Agent (Fusion Mode / 100% Local)
+│   │   └── dsh-dashboard                      # Script apertura automatica dashboard via SSH tunnel
+│   └── ARCHITETTURA_IBRIDA_3_ACCOUNT_E_ATOMIC_AGENT.md # Playbook operativo e matrice comparativa
 ```
 
 ---
@@ -625,3 +698,7 @@ MACBOOK AIR M1 (Client & Controller)
 | **Daemon OpenCode Remoto** | `opencode serve --service` | In ascolto su `127.0.0.1:49374` con suite MCP completa e interfaccia web | **PASS** |
 | **claude-mem Persistent Worker** | Bun daemon (porta `:37701`) | Servizio attivo per indicizzazione semantica cross-session | **PASS** |
 | **Obsidian Local REST API** | Porte `:27123` e `:27124` | Server REST locale attivo per interrogazione programmatica del Vault | **PASS** |
+| **Antigravity MCP Worker Delegation** | `call_local_worker` RingBuffer | **2.227 token generati a 104.5 tok/s**, 4/4 unit test passati a costo 0 EUR | **PASS** |
+| **Gemini 4 Carbon Direct API Check** | `models/gemini-4-carbon` curl | Chiamata diretta riuscita con API Key su tier prepagato | **PASS** |
+| **Atomic Agent Fusion Hard-Gate** | `fusion-orchestrator-mode.ts` | Blocco totale scritture su Cloud, cap $0.35/turno, isolamento worktree | **PASS** |
+| **Multi-Account Hot Swap & Isolation** | `agy-account` status & switch | Commutazione 1.5s tra Acc 1 e Acc 2, zero login browser, `env -u` blindato | **PASS** |

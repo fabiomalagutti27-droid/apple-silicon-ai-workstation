@@ -52,33 +52,33 @@ def main():
     args = parser.parse_args()
 
     cwd = Path.cwd()
-    print(f"🚀 [submit_phase_pr] Avvio finalizzazione PR nel workspace: {cwd}")
+    print(f"[submit_phase_pr] Avvio finalizzazione PR nel workspace: {cwd}")
 
     # 1. Verifica che siamo in un repository git
     rc, branch, _ = run_cmd(["git", "branch", "--show-current"], cwd=cwd)
     if rc != 0 or not branch:
-        print("❌ Errore: la directory corrente non è un branch git valido.")
+        print("[ERROR] La directory corrente non è un branch git valido.")
         return 1
-    print(f"🌿 Branch attivo: {branch}")
+    print(f"[BRANCH] Branch attivo: {branch}")
 
     # 2. Test suite preventiva con cargo-uma
     if not args.skip_test:
-        print("🧪 Esecuzione test suite con cargo-uma...")
+        print("[TEST] Esecuzione test suite con cargo-uma...")
         rc, out, err = run_cmd([CARGO_UMA, "test", "-p", "core-types"], cwd=cwd, timeout=600)
         if rc != 0:
-            print("❌ Errore durante i test di compilazione:")
+            print("[ERROR] Errore durante i test di compilazione:")
             combined_err = f"{out}\n{err}"
             error_lines = [l for l in combined_err.splitlines() if re.search(r"error\[E\d+\]|panicked at|FAILED", l)]
             if error_lines:
                 print("\n".join(error_lines[:15]))
             else:
                 print(combined_err[-1000:])
-            print("\n👉 Correggi gli errori sopra prima di riprovare submit_phase_pr.")
+            print("\nCorreggi gli errori sopra prima di riprovare submit_phase_pr.")
             return 1
-        print("✅ Test suite completata con successo (0 errori).")
+        print("[SUCCESS] Test suite completata con successo (0 errori).")
 
     # 3. Git staging
-    print("📦 Staging dei file modificati...")
+    print("[STAGE] Staging dei file modificati...")
     run_cmd(["git", "add", "crates/", "docs/", "tests/", "Cargo.toml", "Cargo.lock"], cwd=cwd)
     run_cmd(["git", "reset", "HEAD", "PREFLIGHT_RECONCILIATION.md", ".cargo/"], cwd=cwd)
 
@@ -91,17 +91,17 @@ def main():
         clean_name = branch.replace("agent/", "")
         phase_tag = f"phase-{phase_m.group(1)}" if phase_m else clean_name
         commit_msg = f"feat({phase_tag}): implement {phase_tag} specifications and tests"
-        print(f"💾 Creazione commit: {commit_msg}")
+        print(f"[COMMIT] Creazione commit: {commit_msg}")
         run_cmd(["git", "commit", "-m", commit_msg], cwd=cwd)
 
     # 5. Push su origin
     print(f"⬆️ Push su origin/{branch}...")
     rc, _, err = run_cmd(["git", "push", "-u", "origin", branch], cwd=cwd)
     if rc != 0 and "Everything up-to-date" not in err:
-        print(f"⚠️ Warning push: {err}")
+        print(f"[WARNING] Warning push: {err}")
 
     # 6. Apertura Pull Request tramite gh-agent (attiva automaticamente agy_pr_review_gate.py)
-    print("🔍 Verifica Actor-Critic e pubblicazione Pull Request...")
+    print("[VERIFY] Verifica Actor-Critic e pubblicazione Pull Request...")
     clean_title = branch.replace("agent/", "")
     pr_title = args.title or f"feat: {clean_title}"
     pr_body = args.body or f"Implementazione autonoma per {branch} validata da cargo-uma e Actor-Critic Gate."
@@ -118,12 +118,12 @@ def main():
     output = f"{pr_out}\n{pr_err}".strip()
 
     if rc == 0:
-        print("🎉 PULL REQUEST CREATA CON SUCCESSO!")
+        print("[SUCCESS] Pull request creata con successo.")
         print(output)
         return 0
 
     if "CHANGES REQUESTED" in output:
-        print("🚫 Actor-Critic Gate ha richiesto modifiche:")
+        print("[REJECTED] Actor-Critic Gate ha richiesto modifiche:")
         print(output)
         return 2
 
@@ -133,7 +133,7 @@ def main():
         print(output)
         return 0
 
-    print(f"❌ Errore durante la creazione della PR: {output}")
+    print(f"[ERROR] Errore durante la creazione della PR: {output}")
     return rc
 
 

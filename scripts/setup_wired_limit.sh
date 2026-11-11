@@ -11,7 +11,7 @@ PLIST_DEST="/Library/LaunchDaemons/com.localai.wiredlimit.plist"
 echo "=== Configurazione Wired Memory Limit Metal (56 GB / 57344 MB) ==="
 
 if [ "$EUID" -ne 0 ]; then
-    echo "⚠️ Questo script richiede privilegi di amministratore (root)."
+    echo "[WARNING] Questo script richiede privilegi di amministratore (root)."
     echo "   Rilancio con sudo..."
     exec sudo bash "$0" "$@"
 fi
@@ -46,4 +46,4 @@ launchctl load -w "$PLIST_DEST"
 
 /usr/sbin/sysctl iogpu.wired_limit_mb=57344
 CURRENT_LIMIT=$(/usr/sbin/sysctl -n iogpu.wired_limit_mb)
-echo "✅ Limite UMA Metal applicato con successo: ${CURRENT_LIMIT} MB"
+echo "[SUCCESS] Limite UMA Metal applicato con successo: ${CURRENT_LIMIT} MB"

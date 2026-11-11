@@ -28,9 +28,9 @@ for tmpl in "${TEMPLATES_DIR}"/*.plist.template; do
     # Carica il servizio con launchctl
     launchctl unload "$dest" 2>/dev/null || true
     launchctl load -w "$dest" 2>/dev/null || true
-    echo "    ✅ Servizio ${filename} registrato"
+    echo "    [OK] Servizio ${filename} registrato"
 done
 
 echo "======================================================================"
-echo "🎉 TUTTI I LAUNCHAGENTS SONO STATI INSTALLATI E CARICATI CON SUCCESSO!"
+echo "[SUCCESS] Tutti i LaunchAgents sono stati installati e caricati con successo."
 echo "======================================================================"
